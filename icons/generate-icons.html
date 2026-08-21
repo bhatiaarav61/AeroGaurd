@@ -1,86 +1,91 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <title>Generate Icons</title>
+  <meta charset="utf-8">
+  <title>AeroGuard Icon Generator</title>
   <style>
-    body { font-family: system-ui; padding: 20px; max-width: 800px; margin: 0 auto; }
-    .icon-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 20px; margin: 20px 0; }
+    body { font-family: system-ui; padding: 20px; background: #0f172a; color: #f8fafc; }
+    .icon-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-top: 20px; }
     .icon-item { text-align: center; }
-    canvas { border: 1px solid #ddd; border-radius: 8px; background: #f8f9fa; }
-    button { padding: 10px 20px; background: #3498db; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; }
-    button:hover { background: #2980b9; }
-    button:disabled { background: #95a5a6; cursor: not-allowed; }
+    canvas { border: 2px solid #334155; border-radius: 8px; background: #0f172a; }
+    button { padding: 12px 24px; background: #38bdf8; color: #0f172a; border: none; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 16px; }
+    button:hover { background: #0ea5e9; }
+    h1 { color: #38bdf8; }
   </style>
 </head>
 <body>
-  <h1>AeroGuard - Icon Generator</h1>
-  <p>Click "Generate Icons" to create all required PNG sizes, then right-click each canvas to save as PNG.</p>
-  <button id="generateBtn">Generate Icons</button>
-
-  <div class="icon-grid" id="iconGrid"></div>
+  <h1>AeroGuard Icon Generator</h1>
+  <p>Click "Generate All Icons" to create PNG files, then right-click each canvas → "Save image as..."</p>
+  <button onclick="generateAll()">Generate All Icons</button>
+  <div class="icon-grid" id="icons"></div>
 
   <script>
-    const sizes = [16, 32, 48, 128];
-    const svgContent = `<svg width="128" height="128" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" style="stop-color:#3498db;stop-opacity:1" />
-          <stop offset="100%" style="stop-color:#2980b9;stop-opacity:1" />
-        </linearGradient>
-        <linearGradient id="shield" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" style="stop-color:#ffffff;stop-opacity:1" />
-          <stop offset="100%" style="stop-color:#ecf0f1;stop-opacity:1" />
-        </linearGradient>
-        <linearGradient id="cross" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" style="stop-color:#e74c3c;stop-opacity:1" />
-          <stop offset="100%" style="stop-color:#c0392b;stop-opacity:1" />
-        </linearGradient>
-      </defs>
-      <rect width="128" height="128" rx="24" fill="url(#bg)"/>
-      <path d="M24 16 L104 16 L104 72 C104 94 94 110 64 112 C34 110 24 94 24 72 Z" fill="url(#shield)" stroke="#bdc3c7" stroke-width="1"/>
-      <line x1="48" y1="40" x2="80" y2="72" stroke="url(#cross)" stroke-width="6" stroke-linecap="round"/>
-      <line x1="80" y1="40" x2="48" y2="72" stroke="url(#cross)" stroke-width="6" stroke-linecap="round"/>
-      <path d="M28 20 L100 20 L100 50 C100 65 90 78 64 80 C38 78 28 65 28 50 Z" fill="rgba(255,255,255,0.15)"/>
-    </svg>`;
+    function drawIcon(ctx, size) {
+      // Background
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(0, 0, size, size);
 
-    document.getElementById('generateBtn').addEventListener('click', async () => {
-      const btn = document.getElementById('generateBtn');
-      btn.disabled = true;
-      btn.textContent = 'Generating...';
+      // Shield shape
+      ctx.fillStyle = '#38bdf8';
+      ctx.beginPath();
+      ctx.moveTo(size/2, size*0.04);
+      ctx.lineTo(size*0.125, size*0.21);
+      ctx.lineTo(size*0.125, size*0.71);
+      ctx.bezierCurveTo(size*0.125, size*0.94, size*0.5, size*0.98, size/2, size*0.96);
+      ctx.bezierCurveTo(size*0.875, size*0.98, size*0.875, size*0.94, size*0.875, size*0.71);
+      ctx.lineTo(size*0.875, size*0.21);
+      ctx.closePath();
+      ctx.fill();
 
-      const grid = document.getElementById('iconGrid');
-      grid.innerHTML = '';
+      // Inner accent
+      ctx.fillStyle = '#0f172a';
+      ctx.beginPath();
+      ctx.moveTo(size/2, size*0.12);
+      ctx.lineTo(size*0.3, size*0.3);
+      ctx.lineTo(size*0.3, size*0.62);
+      ctx.bezierCurveTo(size*0.3, size*0.8, size/2, size*0.85, size/2, size*0.83);
+      ctx.bezierCurveTo(size*0.7, size*0.85, size*0.7, size*0.8, size*0.7, size*0.62);
+      ctx.lineTo(size*0.7, size*0.3);
+      ctx.closePath();
+      ctx.fill();
+    }
 
-      for (const size of sizes) {
+    function generateAll() {
+      const container = document.getElementById('icons');
+      container.innerHTML = '';
+      const sizes = [16, 32, 48, 128];
+
+      sizes.forEach(size => {
+        const div = document.createElement('div');
+        div.className = 'icon-item';
+
         const canvas = document.createElement('canvas');
         canvas.width = size;
         canvas.height = size;
         const ctx = canvas.getContext('2d');
+        drawIcon(ctx, size);
 
-        // Load SVG as image
-        const img = new Image();
-        img.onload = () => {
-          ctx.drawImage(img, 0, 0, size, size);
-        };
-        img.src = 'data:image/svg+xml;base64,' + btoa(svgContent);
+        const label = document.createElement('div');
+        label.textContent = `${size}x${size}`;
+        label.style.marginTop = '8px';
+        label.style.color = '#94a3b8';
 
-        const wrapper = document.createElement('div');
-        wrapper.className = 'icon-item';
-        wrapper.innerHTML = `<canvas></canvas><p>${size}x${size}</p><button class="save-btn">Save as PNG</button>`;
-        wrapper.querySelector('canvas').replaceWith(canvas);
-        wrapper.querySelector('.save-btn').addEventListener('click', () => {
+        const downloadBtn = document.createElement('button');
+        downloadBtn.textContent = `Save ${size}x${size}.png`;
+        downloadBtn.style.marginTop = '8px';
+        downloadBtn.onclick = () => {
           const link = document.createElement('a');
           link.download = `icon-${size}.png`;
           link.href = canvas.toDataURL('image/png');
           link.click();
-        });
-        grid.appendChild(wrapper);
-      }
+        };
 
-      btn.disabled = false;
-      btn.textContent = 'Generate Icons';
-    });
+        div.appendChild(canvas);
+        div.appendChild(label);
+        div.appendChild(downloadBtn);
+        container.appendChild(div);
+      });
+    }
   </script>
 </body>
 </html>

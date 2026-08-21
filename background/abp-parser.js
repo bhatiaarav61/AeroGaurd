@@ -305,7 +305,7 @@ export function convertToUrlFilter(pattern, options = {}) {
 }
 
 /**
- * Convert parsed ABP filter to DNR rule
+ * Convert parsed ABP filter to DNR rule (HIGH PERFORMANCE)
  * @param {Object} parsed - Parsed filter from parseAbpFilter
  * @param {number} ruleId - Unique rule ID
  * @param {string} listKey - Filter list key
@@ -323,6 +323,13 @@ export function createDnrRule(parsed, ruleId, listKey = '', originalFilter = '')
   let urlFilter = convertToUrlFilter(urlPattern || originalFilter, options);
   if (!urlFilter) return null;
 
+  // HIGH PERFORMANCE: Use tracking-optimized resource types
+  // Excludes: main_frame, stylesheet, font, object, media, websocket, csp_report
+  // These are rarely used by trackers/ads
+  const TRACKING_RESOURCE_TYPES = [
+    'script', 'xmlhttprequest', 'image', 'sub_frame', 'ping', 'other'
+  ];
+
   // Determine resource types
   let resourceTypes;
   if (options.resourceTypes.length > 0) {
@@ -335,14 +342,14 @@ export function createDnrRule(parsed, ruleId, listKey = '', originalFilter = '')
       .filter(Boolean);
     resourceTypes = ALL_RESOURCE_TYPES.filter(t => !excluded.includes(t));
   } else {
-    // Default: all resource types EXCEPT main_frame (to avoid blocking page navigation)
-    resourceTypes = ALL_RESOURCE_TYPES.filter(t => t !== 'main_frame');
+    // HIGH PERFORMANCE DEFAULT: Use tracking-optimized types
+    resourceTypes = TRACKING_RESOURCE_TYPES;
   }
 
   // Remove duplicates
   resourceTypes = [...new Set(resourceTypes)];
 
-  // Remove invalid resource types that might have been added
+  // Remove invalid resource types
   const VALID_DNR_RESOURCE_TYPES = ['main_frame', 'sub_frame', 'script', 'xmlhttprequest', 'image', 'stylesheet', 'font', 'object', 'media', 'websocket', 'other', 'ping', 'csp_report'];
   resourceTypes = resourceTypes.filter(t => VALID_DNR_RESOURCE_TYPES.includes(t));
 
@@ -355,7 +362,6 @@ export function createDnrRule(parsed, ruleId, listKey = '', originalFilter = '')
   }
   // Add domains from $domain= option
   if (options.domains.length > 0) {
-    // If we already have domains from ||domain^, we need to merge
     if (condition.domains) {
       condition.domains = [...new Set([...condition.domains, ...options.domains])];
     } else {
@@ -365,7 +371,6 @@ export function createDnrRule(parsed, ruleId, listKey = '', originalFilter = '')
   if (excludedDomains.length > 0) {
     condition.excludedDomains = excludedDomains;
   }
-  // Add excluded domains from $~domain= option
   if (options.excludedDomains.length > 0) {
     if (condition.excludedDomains) {
       condition.excludedDomains = [...new Set([...condition.excludedDomains, ...options.excludedDomains])];
@@ -373,9 +378,15 @@ export function createDnrRule(parsed, ruleId, listKey = '', originalFilter = '')
       condition.excludedDomains = options.excludedDomains;
     }
   }
-  if (options.domainType === 'firstParty' || options.domainType === 'thirdParty') {
+
+  // HIGH PERFORMANCE: Auto-set domainType for third-party tracking
+  // ||domain^ patterns are almost always third-party trackers
+  if (!options.domainType && urlFilter.startsWith('||') && urlFilter.includes('^')) {
+    condition.domainType = 'thirdParty';
+  } else if (options.domainType === 'firstParty' || options.domainType === 'thirdParty') {
     condition.domainType = options.domainType;
   }
+
   if (options.matchCase) {
     condition.isUrlFilterCaseSensitive = true;
   }

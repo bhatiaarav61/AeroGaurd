@@ -1978,5 +1978,817 @@
         "websocket"
       ]
     }
+  },
+  {
+    "id": 111,
+    "priority": 1,
+    "action": {
+      "type": "redirect",
+      "redirect": {
+        "extensionPath": "/surrogates/noop.js"
+      }
+    },
+    "condition": {
+      "urlFilter": "||google-analytics.com/analytics.js",
+      "resourceTypes": ["script"]
+    }
+  },
+  {
+    "id": 112,
+    "priority": 1,
+    "action": {
+      "type": "redirect",
+      "redirect": {
+        "extensionPath": "/surrogates/noop.js"
+      }
+    },
+    "condition": {
+      "urlFilter": "||google-analytics.com/ga.js",
+      "resourceTypes": ["script"]
+    }
+  },
+  {
+    "id": 113,
+    "priority": 1,
+    "action": {
+      "type": "redirect",
+      "redirect": {
+        "extensionPath": "/surrogates/noop.js"
+      }
+    },
+    "condition": {
+      "urlFilter": "||googletagmanager.com/gtag/js*",
+      "resourceTypes": ["script"]
+    }
+  },
+  {
+    "id": 114,
+    "priority": 1,
+    "action": {
+      "type": "redirect",
+      "redirect": {
+        "extensionPath": "/surrogates/noop.js"
+      }
+    },
+    "condition": {
+      "urlFilter": "||googletagmanager.com/gtm.js*",
+      "resourceTypes": ["script"]
+    }
+  },
+  {
+    "id": 115,
+    "priority": 1,
+    "action": {
+      "type": "redirect",
+      "redirect": {
+        "extensionPath": "/surrogates/noop.js"
+      }
+    },
+    "condition": {
+      "urlFilter": "||connect.facebook.net/en_US/fbevents.js",
+      "resourceTypes": ["script"]
+    }
+  },
+  {
+    "id": 116,
+    "priority": 1,
+    "action": {
+      "type": "redirect",
+      "redirect": {
+        "extensionPath": "/surrogates/noop.js"
+      }
+    },
+    "condition": {
+      "urlFilter": "||connect.facebook.net/signals/config/*",
+      "resourceTypes": ["script"]
+    }
+  },
+  {
+    "id": 117,
+    "priority": 1,
+    "action": {
+      "type": "redirect",
+      "redirect": {
+        "extensionPath": "/surrogates/noop.js"
+      }
+    },
+    "condition": {
+      "urlFilter": "||static.hotjar.com/c/hotjar-*.js",
+      "resourceTypes": ["script"]
+    }
+  },
+  {
+    "id": 118,
+    "priority": 1,
+    "action": {
+      "type": "redirect",
+      "redirect": {
+        "extensionPath": "/surrogates/noop.js"
+      }
+    },
+    "condition": {
+      "urlFilter": "||cdn.segment.com/analytics.js",
+      "resourceTypes": ["script"]
+    }
+  },
+  {
+    "id": 119,
+    "priority": 1,
+    "action": {
+      "type": "redirect",
+      "redirect": {
+        "extensionPath": "/surrogates/noop.js"
+      }
+    },
+    "condition": {
+      "urlFilter": "||cdn.optimizely.com/js/*.js",
+      "resourceTypes": ["script"]
+    }
+  },
+  {
+    "id": 120,
+    "priority": 1,
+    "action": {
+      "type": "redirect",
+      "redirect": {
+        "extensionPath": "/surrogates/noop.js"
+      }
+    },
+    "condition": {
+      "urlFilter": "||cdn.mxpnl.com/libs/mixpanel-*.js",
+      "resourceTypes": ["script"]
+    }
+  },
+  {
+    "id": 121,
+    "priority": 1,
+    "action": {
+      "type": "redirect",
+      "redirect": {
+        "extensionPath": "/surrogates/noop.js"
+      }
+    },
+    "condition": {
+      "urlFilter": "||cdn.amplitude.com/libs/amplitude-*.js",
+      "resourceTypes": ["script"]
+    }
+  },
+  {
+    "id": 122,
+    "priority": 1,
+    "action": {
+      "type": "redirect",
+      "redirect": {
+        "extensionPath": "/surrogates/noop.js"
+      }
+    },
+    "condition": {
+      "urlFilter": "||cdn.heapanalytics.com/js/heap-*.js",
+      "resourceTypes": ["script"]
+    }
+  },
+  {
+    "id": 123,
+    "priority": 1,
+    "action": {
+      "type": "redirect",
+      "redirect": {
+        "extensionPath": "/surrogates/noop.js"
+      }
+    },
+    "condition": {
+      "urlFilter": "||cdn.mouseflow.com/projects/*.js",
+      "resourceTypes": ["script"]
+    }
+  },
+  {
+    "id": 124,
+    "priority": 1,
+    "action": {
+      "type": "redirect",
+      "redirect": {
+        "extensionPath": "/surrogates/noop.js"
+      }
+    },
+    "condition": {
+      "urlFilter": "||script.crazyegg.com/pages/scripts/*.js",
+      "resourceTypes": ["script"]
+    }
+  },
+  {
+    "id": 125,
+    "priority": 1,
+    "action": {
+      "type": "redirect",
+      "redirect": {
+        "extensionPath": "/surrogates/noop.js"
+      }
+    },
+    "condition": {
+      "urlFilter": "||tags.tiqcdn.com/utag/*.js",
+      "resourceTypes": ["script"]
+    }
+  },
+  {
+    "id": 126,
+    "priority": 1,
+    "action": {
+      "type": "redirect",
+      "redirect": {
+        "extensionPath": "/surrogates/noop.js"
+      }
+    },
+    "condition": {
+      "urlFilter": "||assets.adobedtm.com/*/satelliteLib-*.js",
+      "resourceTypes": ["script"]
+    }
+  },
+  {
+    "id": 127,
+    "priority": 1,
+    "action": {
+      "type": "redirect",
+      "redirect": {
+        "extensionPath": "/surrogates/noop.js"
+      }
+    },
+    "condition": {
+      "urlFilter": "||js-agent.newrelic.com/nr-*.js",
+      "resourceTypes": ["script"]
+    }
+  },
+  {
+    "id": 128,
+    "priority": 1,
+    "action": {
+      "type": "redirect",
+      "redirect": {
+        "extensionPath": "/surrogates/noop.js"
+      }
+    },
+    "condition": {
+      "urlFilter": "||bam.nr-data.net/1/*",
+      "resourceTypes": ["script", "xmlhttprequest", "ping"]
+    }
+  },
+  {
+    "id": 129,
+    "priority": 1,
+    "action": {
+      "type": "redirect",
+      "redirect": {
+        "extensionPath": "/surrogates/noop.js"
+      }
+    },
+    "condition": {
+      "urlFilter": "||browser-intake-datadoghq.com/v1/*",
+      "resourceTypes": ["script", "xmlhttprequest", "ping"]
+    }
+  },
+  {
+    "id": 130,
+    "priority": 1,
+    "action": {
+      "type": "redirect",
+      "redirect": {
+        "extensionPath": "/surrogates/noop.js"
+      }
+    },
+    "condition": {
+      "urlFilter": "||js.sentry-cdn.com/*.min.js",
+      "resourceTypes": ["script"]
+    }
+  },
+  {
+    "id": 131,
+    "priority": 1,
+    "action": {
+      "type": "redirect",
+      "redirect": {
+        "extensionPath": "/surrogates/noop.js"
+      }
+    },
+    "condition": {
+      "urlFilter": "||d2wy8f7a9ursnm.cloudfront.net/bugsnag-*.js",
+      "resourceTypes": ["script"]
+    }
+  },
+  {
+    "id": 132,
+    "priority": 1,
+    "action": {
+      "type": "redirect",
+      "redirect": {
+        "extensionPath": "/surrogates/noop.js"
+      }
+    },
+    "condition": {
+      "urlFilter": "||cdn.split.io/client/splitio-*.js",
+      "resourceTypes": ["script"]
+    }
+  },
+  {
+    "id": 133,
+    "priority": 1,
+    "action": {
+      "type": "redirect",
+      "redirect": {
+        "extensionPath": "/surrogates/noop.js"
+      }
+    },
+    "condition": {
+      "urlFilter": "||cdn.launchdarkly.com/clientside-*.js",
+      "resourceTypes": ["script"]
+    }
+  },
+  {
+    "id": 134,
+    "priority": 1,
+    "action": {
+      "type": "redirect",
+      "redirect": {
+        "extensionPath": "/surrogates/noop.js"
+      }
+    },
+    "condition": {
+      "urlFilter": "||cdn.pendo.io/agent/static/*.js",
+      "resourceTypes": ["script"]
+    }
+  },
+  {
+    "id": 135,
+    "priority": 1,
+    "action": {
+      "type": "redirect",
+      "redirect": {
+        "extensionPath": "/surrogates/noop.js"
+      }
+    },
+    "condition": {
+      "urlFilter": "||cdn.gigya.com/js/gigya.js",
+      "resourceTypes": ["script"]
+    }
+  },
+  {
+    "id": 136,
+    "priority": 1,
+    "action": {
+      "type": "redirect",
+      "redirect": {
+        "extensionPath": "/surrogates/noop.js"
+      }
+    },
+    "condition": {
+      "urlFilter": "||js.intercomcdn.com/shim.latest.js",
+      "resourceTypes": ["script"]
+    }
+  },
+  {
+    "id": 137,
+    "priority": 1,
+    "action": {
+      "type": "redirect",
+      "redirect": {
+        "extensionPath": "/surrogates/noop.js"
+      }
+    },
+    "condition": {
+      "urlFilter": "||widget.intercom.io/widget/*.js",
+      "resourceTypes": ["script"]
+    }
+  },
+  {
+    "id": 138,
+    "priority": 1,
+    "action": {
+      "type": "redirect",
+      "redirect": {
+        "extensionPath": "/surrogates/noop.js"
+      }
+    },
+    "condition": {
+      "urlFilter": "||js.driftt.com/include/*.js",
+      "resourceTypes": ["script"]
+    }
+  },
+  {
+    "id": 139,
+    "priority": 1,
+    "action": {
+      "type": "redirect",
+      "redirect": {
+        "extensionPath": "/surrogates/noop.js"
+      }
+    },
+    "condition": {
+      "urlFilter": "||embed.tawk.to/*.js",
+      "resourceTypes": ["script"]
+    }
+  },
+  {
+    "id": 140,
+    "priority": 1,
+    "action": {
+      "type": "redirect",
+      "redirect": {
+        "extensionPath": "/surrogates/noop.js"
+      }
+    },
+    "condition": {
+      "urlFilter": "||cdn.crisp.chat/l.js",
+      "resourceTypes": ["script"]
+    }
+  },
+  {
+    "id": 141,
+    "priority": 1,
+    "action": {
+      "type": "redirect",
+      "redirect": {
+        "extensionPath": "/surrogates/noop.js"
+      }
+    },
+    "condition": {
+      "urlFilter": "||static.smartsupp.com/chat.js",
+      "resourceTypes": ["script"]
+    }
+  },
+  {
+    "id": 142,
+    "priority": 1,
+    "action": {
+      "type": "redirect",
+      "redirect": {
+        "extensionPath": "/surrogates/noop.js"
+      }
+    },
+    "condition": {
+      "urlFilter": "||code.tidio.co/*.js",
+      "resourceTypes": ["script"]
+    }
+  },
+  {
+    "id": 143,
+    "priority": 1,
+    "action": {
+      "type": "redirect",
+      "redirect": {
+        "extensionPath": "/surrogates/noop.js"
+      }
+    },
+    "condition": {
+      "urlFilter": "||static.zdassets.com/ekr/snippet.js",
+      "resourceTypes": ["script"]
+    }
+  },
+  {
+    "id": 144,
+    "priority": 1,
+    "action": {
+      "type": "redirect",
+      "redirect": {
+        "extensionPath": "/surrogates/noop.js"
+      }
+    },
+    "condition": {
+      "urlFilter": "||widget.freshchat.com/widget/*.js",
+      "resourceTypes": ["script"]
+    }
+  },
+  {
+    "id": 145,
+    "priority": 1,
+    "action": {
+      "type": "redirect",
+      "redirect": {
+        "extensionPath": "/surrogates/noop.js"
+      }
+    },
+    "condition": {
+      "urlFilter": "||api.segment.io/v1/track*",
+      "resourceTypes": ["xmlhttprequest", "ping"]
+    }
+  },
+  {
+    "id": 146,
+    "priority": 1,
+    "action": {
+      "type": "redirect",
+      "redirect": {
+        "extensionPath": "/surrogates/noop.js"
+      }
+    },
+    "condition": {
+      "urlFilter": "||tpc.googlesyndication.com/pagead/js/adsbygoogle.js",
+      "resourceTypes": ["script"]
+    }
+  },
+  {
+    "id": 147,
+    "priority": 1,
+    "action": {
+      "type": "redirect",
+      "redirect": {
+        "extensionPath": "/surrogates/noop.js"
+      }
+    },
+    "condition": {
+      "urlFilter": "||pagead2.googlesyndication.com/pagead/js/adsbygoogle.js",
+      "resourceTypes": ["script"]
+    }
+  },
+  {
+    "id": 148,
+    "priority": 1,
+    "action": {
+      "type": "redirect",
+      "redirect": {
+        "extensionPath": "/surrogates/noop.js"
+      }
+    },
+    "condition": {
+      "urlFilter": "||securepubads.g.doubleclick.net/tag/js/gpt.js",
+      "resourceTypes": ["script"]
+    }
+  },
+  {
+    "id": 149,
+    "priority": 1,
+    "action": {
+      "type": "redirect",
+      "redirect": {
+        "extensionPath": "/surrogates/noop.js"
+      }
+    },
+    "condition": {
+      "urlFilter": "||www.googletagservices.com/tag/js/gpt.js",
+      "resourceTypes": ["script"]
+    }
+  },
+  {
+    "id": 150,
+    "priority": 1,
+    "action": {
+      "type": "redirect",
+      "redirect": {
+        "extensionPath": "/surrogates/noop.js"
+      }
+    },
+    "condition": {
+      "urlFilter": "||tags.tiqcdn.com/utag/tiqapp.js",
+      "resourceTypes": ["script"]
+    }
+  },
+  {
+    "id": 151,
+    "priority": 1,
+    "action": {
+      "type": "redirect",
+      "redirect": {
+        "extensionPath": "/surrogates/noop.js"
+      }
+    },
+    "condition": {
+      "urlFilter": "||matomo.*/matomo.js",
+      "resourceTypes": ["script"]
+    }
+  },
+  {
+    "id": 152,
+    "priority": 1,
+    "action": {
+      "type": "redirect",
+      "redirect": {
+        "extensionPath": "/surrogates/noop.js"
+      }
+    },
+    "condition": {
+      "urlFilter": "||piwik.*/piwik.js",
+      "resourceTypes": ["script"]
+    }
+  },
+  {
+    "id": 153,
+    "priority": 1,
+    "action": {
+      "type": "redirect",
+      "redirect": {
+        "extensionPath": "/surrogates/noop.js"
+      }
+    },
+    "condition": {
+      "urlFilter": "||cdn.rackcdn.com/*.js",
+      "resourceTypes": ["script"]
+    }
+  },
+  {
+    "id": 154,
+    "priority": 1,
+    "action": {
+      "type": "redirect",
+      "redirect": {
+        "extensionPath": "/surrogates/noop.js"
+      }
+    },
+    "condition": {
+      "urlFilter": "||yastatic.net/metrika/watch.js",
+      "resourceTypes": ["script"]
+    }
+  },
+  {
+    "id": 155,
+    "priority": 1,
+    "action": {
+      "type": "redirect",
+      "redirect": {
+        "extensionPath": "/surrogates/noop.js"
+      }
+    },
+    "condition": {
+      "urlFilter": "||mc.yandex.ru/metrika/watch.js",
+      "resourceTypes": ["script"]
+    }
+  },
+  {
+    "id": 156,
+    "priority": 1,
+    "action": {
+      "type": "redirect",
+      "redirect": {
+        "extensionPath": "/surrogates/noop.js"
+      }
+    },
+    "condition": {
+      "urlFilter": "||hm.baidu.com/hm.js",
+      "resourceTypes": ["script"]
+    }
+  },
+  {
+    "id": 157,
+    "priority": 1,
+    "action": {
+      "type": "redirect",
+      "redirect": {
+        "extensionPath": "/surrogates/noop.js"
+      }
+    },
+    "condition": {
+      "urlFilter": "||s.cnzz.com/z_stat.php*",
+      "resourceTypes": ["script", "image", "ping"]
+    }
+  },
+  {
+    "id": 158,
+    "priority": 1,
+    "action": {
+      "type": "redirect",
+      "redirect": {
+        "extensionPath": "/surrogates/noop.js"
+      }
+    },
+    "condition": {
+      "urlFilter": "||analytics.twitter.com/i/adsct*",
+      "resourceTypes": ["script", "image", "ping", "xmlhttprequest"]
+    }
+  },
+  {
+    "id": 159,
+    "priority": 1,
+    "action": {
+      "type": "redirect",
+      "redirect": {
+        "extensionPath": "/surrogates/noop.js"
+      }
+    },
+    "condition": {
+      "urlFilter": "||static.ads-twitter.com/oct.js",
+      "resourceTypes": ["script"]
+    }
+  },
+  {
+    "id": 160,
+    "priority": 1,
+    "action": {
+      "type": "redirect",
+      "redirect": {
+        "extensionPath": "/surrogates/noop.js"
+      }
+    },
+    "condition": {
+      "urlFilter": "||snap.licdn.com/li.lms-analytics/insight.min.js",
+      "resourceTypes": ["script"]
+    }
+  },
+  {
+    "id": 161,
+    "priority": 1,
+    "action": {
+      "type": "redirect",
+      "redirect": {
+        "extensionPath": "/surrogates/noop.js"
+      }
+    },
+    "condition": {
+      "urlFilter": "||px.ads.linkedin.com/collect*",
+      "resourceTypes": ["script", "image", "ping", "xmlhttprequest"]
+    }
+  },
+  {
+    "id": 162,
+    "priority": 1,
+    "action": {
+      "type": "redirect",
+      "redirect": {
+        "extensionPath": "/surrogates/noop.js"
+      }
+    },
+    "condition": {
+      "urlFilter": "||static.ads.linkedin.com/*.js",
+      "resourceTypes": ["script"]
+    }
+  },
+  {
+    "id": 163,
+    "priority": 1,
+    "action": {
+      "type": "redirect",
+      "redirect": {
+        "extensionPath": "/surrogates/noop.js"
+      }
+    },
+    "condition": {
+      "urlFilter": "||connect.facebook.net/signals/plugins/identity.js",
+      "resourceTypes": ["script"]
+    }
+  },
+  {
+    "id": 164,
+    "priority": 1,
+    "action": {
+      "type": "redirect",
+      "redirect": {
+        "extensionPath": "/surrogates/noop.js"
+      }
+    },
+    "condition": {
+      "urlFilter": "||connect.facebook.net/en_US/sdk.js",
+      "resourceTypes": ["script"]
+    }
+  },
+  {
+    "id": 165,
+    "priority": 1,
+    "action": {
+      "type": "redirect",
+      "redirect": {
+        "extensionPath": "/surrogates/noop.js"
+      }
+    },
+    "condition": {
+      "urlFilter": "||static.xx.fbcdn.net/rsrc.php/*",
+      "resourceTypes": ["script"]
+    }
+  },
+  {
+    "id": 166,
+    "priority": 1,
+    "action": {
+      "type": "redirect",
+      "redirect": {
+        "extensionPath": "/surrogates/noop.js"
+      }
+    },
+    "condition": {
+      "urlFilter": "||bat.bing.com/bat.js",
+      "resourceTypes": ["script"]
+    }
+  },
+  {
+    "id": 167,
+    "priority": 1,
+    "action": {
+      "type": "redirect",
+      "redirect": {
+        "extensionPath": "/surrogates/noop.js"
+      }
+    },
+    "condition": {
+      "urlFilter": "||c.clarity.ms/collect*",
+      "resourceTypes": ["script", "image", "ping", "xmlhttprequest"]
+    }
+  },
+  {
+    "id": 168,
+    "priority": 1,
+    "action": {
+      "type": "redirect",
+      "redirect": {
+        "extensionPath": "/surrogates/noop.js"
+      }
+    },
+    "condition": {
+      "urlFilter": "||c.clarity.ms/sync*",
+      "resourceTypes": ["script", "image", "ping", "xmlhttprequest"]
+    }
   }
 ]

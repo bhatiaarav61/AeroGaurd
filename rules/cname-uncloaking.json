@@ -1,173 +1,21 @@
 [
   {
-    "id": 8000000,
+    "id": 1,
     "priority": 1,
-    "action": { "type": "block" },
+    "action": {
+      "type": "block"
+    },
     "condition": {
-      "urlFilter": "||analytics.example.com^",
-      "requestDomains": ["example.com", "*.example.com"],
-      "excludedInitiatorDomains": ["tracking.example.com"],
-      "resourceTypes": ["script", "xmlhttprequest", "image", "sub_frame"]
-    }
-  },
-  {
-    "id": 8000001,
-    "priority": 1,
-    "action": { "type": "block" },
-    "condition": {
-      "urlFilter": "||analytics.sub.example.com^",
-      "requestDomains": ["example.com"],
-      "resourceTypes": ["script", "xmlhttprequest", "image", "sub_frame"]
-    }
-  },
-  {
-    "id": 8000002,
-    "priority": 1,
-    "action": { "type": "block" },
-    "condition": {
-      "urlFilter": "||metrics.example.com^",
-      "requestDomains": ["example.com"],
-      "resourceTypes": ["script", "xmlhttprequest", "image", "sub_frame"]
-    }
-  },
-  {
-    "id": 8000003,
-    "priority": 1,
-    "action": { "type": "block" },
-    "condition": {
-      "urlFilter": "||metrics.example.com^",
-      "requestDomains": ["example.com"],
-      "resourceTypes": ["script", "xmlhttprequest", "image", "sub_frame"]
-    }
-  },
-  {
-    "id": 8000004,
-    "priority": 1,
-    "action": { "type": "block" },
-    "condition": {
-      "urlFilter": "||telemetry.example.com^",
-      "requestDomains": ["example.com"],
-      "resourceTypes": ["script", "xmlhttprequest", "image", "sub_frame"]
-    }
-  },
-  {
-    "id": 8000005,
-    "priority": 1,
-    "action": { "type": "block" },
-    "condition": {
-      "urlFilter": "||tracking.example.com^",
-      "requestDomains": ["example.com"],
-      "resourceTypes": ["script", "xmlhttprequest", "image", "sub_frame"]
-    }
-  },
-  {
-    "id": 8000006,
-    "priority": 1,
-    "action": { "type": "block" },
-    "condition": {
-      "urlFilter": "||analytics.example.com^",
-      "requestDomains": ["example.com"],
-      "resourceTypes": ["script", "xmlhttprequest", "image", "sub_frame"]
-    }
-  },
-  {
-    "id": 8000007,
-    "priority": 1,
-    "action": { "type": "block" },
-    "condition": {
-      "urlFilter": "||tracking.example.com^",
-      "requestDomains": ["example.com"],
-      "resourceTypes": ["script", "xmlhttprequest", "image", "sub_frame"]
-    }
-  },
-  {
-    "id": 8000008,
-    "priority": 1,
-    "action": { "type": "block" },
-    "condition": {
-      "urlFilter": "||metrics.example.com^",
-      "requestDomains": ["example.com"],
-      "resourceTypes": ["script", "xmlhttprequest", "image", "sub_frame"]
-    }
-  },
-  {
-    "id": 8000009,
-    "priority": 1,
-    "action": { "type": "block" },
-    "condition": {
-      "urlFilter": "||telemetry.example.com^",
-      "requestDomains": ["example.com"],
-      "resourceTypes": ["script", "xmlhttprequest", "image", "sub_frame"]
-    }
-  },
-  {
-    "id": 8000010,
-    "priority": 1,
-    "action": { "type": "block" },
-    "condition": {
-      "urlFilter": "||analytics.sub.example.com^",
-      "requestDomains": ["example.com"],
-      "resourceTypes": ["script", "xmlhttprequest", "image", "sub_frame"]
-    }
-  },
-  {
-    "id": 8000011,
-    "priority": 1,
-    "action": { "type": "block" },
-    "condition": {
-      "urlFilter": "||metrics.example.com^",
-      "requestDomains": ["example.com"],
-      "resourceTypes": ["script", "xmlhttprequest", "image", "sub_frame"]
-    }
-  },
-  {
-    "id": 8000012,
-    "priority": 1,
-    "action": { "type": "block" },
-    "condition": {
-      "urlFilter": "||tracking.example.com^",
-      "requestDomains": ["example.com"],
-      "resourceTypes": ["script", "xmlhttprequest", "image", "sub_frame"]
-    }
-  },
-  {
-    "id": 8000013,
-    "priority": 1,
-    "action": { "type": "block" },
-    "condition": {
-      "urlFilter": "||telemetry.example.com^",
-      "requestDomains": ["example.com"],
-      "resourceTypes": ["script", "xmlhttprequest", "image", "sub_frame"]
-    }
-  },
-  {
-    "id": 8000014,
-    "priority": 1,
-    "action": { "type": "block" },
-    "condition": {
-      "urlFilter": "||analytics.example.com^",
-      "requestDomains": ["example.com"],
-      "resourceTypes": ["script", "xmlhttprequest", "image", "sub_frame"]
-    }
-  },
-  {
-    "id": 8000015,
-    "priority": 1,
-    "action": { "type": "block" },
-    "condition": {
-      "urlFilter": "||tracking.example.com^",
-      "requestDomains": ["example.com"],
-      "resourceTypes": ["script", "xmlhttprequest", "image", "sub_frame"]
-    }
-  },
-  {
-    "id": 8000016,
-    "priority": 1,
-    "action": { "type": "block" },
-    "condition": {
-      "urlFilter": "||metrics.example.com^",
-      "requestDomains": ["example.com"],
-      "resourceTypes": ["script", "xmlhttprequest", "image", "sub_frame"]
+      "urlFilter": "||cname-uncloaking-tracker.example^",
+      "resourceTypes": [
+        "script",
+        "image",
+        "xmlhttprequest",
+        "sub_frame",
+        "ping",
+        "websocket",
+        "media"
+      ]
     }
   }
 ]

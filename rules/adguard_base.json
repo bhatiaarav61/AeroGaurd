@@ -1,1 +1,8 @@
-[]
+[
+  {
+    "id": 1,
+    "priority": 1,
+    "action": { "type": "block" },
+    "condition": { "urlFilter": "||adguard.com^", "resourceTypes": ["script", "image", "xmlhttprequest", "sub_frame", "ping", "websocket", "media"] }
+  }
+]
