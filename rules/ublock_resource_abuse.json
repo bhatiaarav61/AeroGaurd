@@ -1,0 +1,263 @@
+[
+  {
+    "id": 139113,
+    "priority": 1,
+    "action": {
+      "type": "block"
+    },
+    "condition": {
+      "urlFilter": "/edgemesh.*.js",
+      "resourceTypes": [
+        "script"
+      ],
+      "excludedDomains": [
+        "edgemesh.com",
+        "edgeno.de"
+      ]
+    }
+  },
+  {
+    "id": 139115,
+    "priority": 1,
+    "action": {
+      "type": "block"
+    },
+    "condition": {
+      "urlFilter": "/adsensebase.js",
+      "resourceTypes": [
+        "script"
+      ]
+    }
+  },
+  {
+    "id": 139116,
+    "priority": 1,
+    "action": {
+      "type": "block"
+    },
+    "condition": {
+      "urlFilter": "://api.*/lib/native.wasm",
+      "resourceTypes": [
+        "main_frame",
+        "sub_frame",
+        "script",
+        "xmlhttprequest",
+        "image",
+        "stylesheet",
+        "font",
+        "object",
+        "media",
+        "websocket",
+        "other",
+        "ping",
+        "csp_report"
+      ]
+    }
+  },
+  {
+    "id": 139117,
+    "priority": 1,
+    "action": {
+      "type": "block"
+    },
+    "condition": {
+      "urlFilter": "|rawgit.com/Pocketart/",
+      "resourceTypes": [
+        "script"
+      ]
+    }
+  },
+  {
+    "id": 139119,
+    "priority": 1,
+    "action": {
+      "type": "block"
+    },
+    "condition": {
+      "urlFilter": "/angular8.js",
+      "resourceTypes": [
+        "main_frame",
+        "sub_frame",
+        "script",
+        "xmlhttprequest",
+        "image",
+        "stylesheet",
+        "font",
+        "object",
+        "media",
+        "websocket",
+        "other",
+        "ping",
+        "csp_report"
+      ]
+    }
+  },
+  {
+    "id": 139129,
+    "priority": 1,
+    "action": {
+      "type": "block"
+    },
+    "condition": {
+      "urlFilter": "./M5q5.js",
+      "resourceTypes": [
+        "script"
+      ]
+    }
+  },
+  {
+    "id": 139137,
+    "priority": 1,
+    "action": {
+      "type": "block"
+    },
+    "condition": {
+      "urlFilter": "|cdn.streamroot.io/dna-client/",
+      "resourceTypes": [
+        "script"
+      ],
+      "domains": [
+        "prod-player.tf1.fr"
+      ]
+    }
+  },
+  {
+    "id": 139140,
+    "priority": 1,
+    "action": {
+      "type": "block"
+    },
+    "condition": {
+      "urlFilter": "|douyucdn.cn/front-publish/stream-sdk-lib-master/dyp2pxp2p_*.js",
+      "resourceTypes": [
+        "script"
+      ],
+      "domains": [
+        "douyu.com"
+      ]
+    }
+  },
+  {
+    "id": 139141,
+    "priority": 1,
+    "action": {
+      "type": "block"
+    },
+    "condition": {
+      "urlFilter": "|msstatic.com/huya/*/p2plib.js",
+      "resourceTypes": [
+        "script"
+      ]
+    }
+  },
+  {
+    "id": 139142,
+    "priority": 1,
+    "action": {
+      "type": "block"
+    },
+    "condition": {
+      "urlFilter": "|sudonull.com/stop-ru.js",
+      "resourceTypes": [
+        "main_frame",
+        "sub_frame",
+        "script",
+        "xmlhttprequest",
+        "image",
+        "stylesheet",
+        "font",
+        "object",
+        "media",
+        "websocket",
+        "other",
+        "ping",
+        "csp_report"
+      ]
+    }
+  },
+  {
+    "id": 139145,
+    "priority": 1,
+    "action": {
+      "type": "block"
+    },
+    "condition": {
+      "urlFilter": "|cdn-prod.securiti.ai/consent/auto_blocking/",
+      "resourceTypes": [
+        "main_frame",
+        "sub_frame",
+        "script",
+        "xmlhttprequest",
+        "image",
+        "stylesheet",
+        "font",
+        "object",
+        "media",
+        "websocket",
+        "other",
+        "ping",
+        "csp_report"
+      ],
+      "domains": [
+        "xfinity.com"
+      ]
+    }
+  },
+  {
+    "id": 139146,
+    "priority": 1,
+    "action": {
+      "type": "block"
+    },
+    "condition": {
+      "urlFilter": "|survey.alchemer.eu/s3/",
+      "resourceTypes": [
+        "main_frame",
+        "sub_frame",
+        "script",
+        "xmlhttprequest",
+        "image",
+        "stylesheet",
+        "font",
+        "object",
+        "media",
+        "websocket",
+        "other",
+        "ping",
+        "csp_report"
+      ],
+      "domains": [
+        "airforce-technology.com"
+      ]
+    }
+  },
+  {
+    "id": 139147,
+    "priority": 1,
+    "action": {
+      "type": "block"
+    },
+    "condition": {
+      "urlFilter": "|bg-gledai.video/wp-content/plugins/crypto-converter-widget/",
+      "resourceTypes": [
+        "script"
+      ]
+    }
+  },
+  {
+    "id": 139148,
+    "priority": 1,
+    "action": {
+      "type": "block"
+    },
+    "condition": {
+      "urlFilter": "|cdn.jsdelivr.net/gh/dejurin/crypto-converter-widget",
+      "resourceTypes": [
+        "script"
+      ],
+      "domains": [
+        "bg-gledai.video"
+      ]
+    }
+  }
+]

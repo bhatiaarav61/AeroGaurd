@@ -1,0 +1,16 @@
+{
+  "name": "adblocker-pro-icons",
+  "version": "1.0.0",
+  "description": "Icon generation for AeroGuard",
+  "main": "generate-icons.js",
+  "scripts": {
+    "generate": "node generate-icons.js"
+  },
+  "dependencies": {
+    "canvas": "^2.11.2"
+  },
+  "private": true,
+  "allowScripts": {
+    "canvas@2.11.2": true
+  }
+}

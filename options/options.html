@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AeroGuard - Settings</title>
+  <link rel="stylesheet" href="options.css">
+</head>
+<body>
+  <div class="options-container">
+    <header class="options-header">
+      <div class="header-left">
+        <div class="logo">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="18" height="18" rx="2"/>
+            <line x1="9" y1="9" x2="15" y2="15"/>
+            <line x1="15" y1="9" x2="9" y2="15"/>
+          </svg>
+        </div>
+        <div>
+          <h1>AeroGuard</h1>
+          <p class="subtitle">Settings & Preferences</p>
+        </div>
+      </div>
+      <div class="header-right">
+        <button class="btn-icon" id="backToPopup" title="Back to popup">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="19" y1="12" x2="5" y2="12"/>
+            <polyline points="12 19 5 12 12 5"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <nav class="options-nav" id="optionsNav">
+      <button class="nav-item active" data-tab="general">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06-.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+        <span>General</span>
+      </button>
+      <button class="nav-item" data-tab="filter-lists">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+        </svg>
+        <span>Filter Lists</span>
+      </button>
+      <button class="nav-item" data-tab="allowlist">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        </svg>
+        <span>Allowlist</span>
+      </button>
+      <button class="nav-item" data-tab="custom-rules">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="16 18 22 12 16 6"/>
+          <polyline points="8 6 2 12 8 18"/>
+        </svg>
+        <span>Custom Rules</span>
+      </button>
+      <button class="nav-item" data-tab="cosmetic">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/>
+          <path d="M8 14s1.5 2 4 2 4-2 4-2"/>
+          <line x1="9" y1="9" x2="9.01" y2="9"/>
+          <line x1="15" y1="9" x2="15.01" y2="9"/>
+        </svg>
+        <span>Cosmetic Filters</span>
+      </button>
+      <button class="nav-item" data-tab="advanced">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 9v4"/>
+          <path d="M10.29 3.86L10.89 5.46"/>
+          <path d="M18.89 5.46l.6 1.6"/>
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M13.11 18.54l-.6 1.6"/>
+          <path d="M5.11 18.54l.6 1.6"/>
+          <path d="M18.54 13.11l1.6-.6"/>
+          <path d="M5.46 10.89l1.6-.6"/>
+        </svg>
+        <span>Advanced</span>
+      </button>
+      <button class="nav-item" data-tab="help">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/>
+          <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+          <line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+        <span>Help</span>
+      </button>
+      <button class="nav-item" data-tab="about">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/>
+          <path d="M12 16v-4"/>
+          <path d="M12 8h.01"/>
+        </svg>
+        <span>About</span>
+      </button>
+    </nav>
+
+    <main class="options-main">
+      <section class="tab-panel active" id="tab-general">
+        <div class="settings-group">
+          <h2>General Settings</h2>
+
+          <div class="setting-item">
+            <div class="setting-info">
+              <label for="enabled">Enable AeroGuard</label>
+              <p class="setting-description">Master switch to enable or disable all ad blocking</p>
+            </div>
+            <button class="toggle-switch" id="enabled" role="switch" aria-checked="true">
+              <span class="toggle-thumb"></span>
+            </button>
+          </div>
+
+          <div class="setting-item">
+            <div class="setting-info">
+              <label for="showBadge">Show Badge Count</label>
+              <p class="setting-description">Display number of blocked items on extension icon</p>
+            </div>
+            <button class="toggle-switch" id="showBadge" role="switch" aria-checked="true">
+              <span class="toggle-thumb"></span>
+            </button>
+          </div>
+
+          <div class="setting-item">
+            <div class="setting-info">
+              <label for="showNotifications">Show Notifications</label>
+              <p class="setting-description">Display notifications when filter lists are updated</p>
+            </div>
+            <button class="toggle-switch" id="showNotifications" role="switch" aria-checked="true">
+              <span class="toggle-thumb"></span>
+            </button>
+          </div>
+
+          <div class="setting-item">
+            <div class="setting-info">
+              <label for="theme">Theme</label>
+              <p class="setting-description">Choose the appearance of the extension</p>
+            </div>
+            <select class="select-input" id="theme">
+              <option value="system">System Default</option>
+              <option value="light">Light</option>
+              <option value="dark">Dark</option>
+            </select>
+          </div>
+
+          <div class="setting-item">
+            <div class="setting-info">
+              <label for="language">Language</label>
+              <p class="setting-description">Extension interface language</p>
+            </div>
+            <select class="select-input" id="language">
+              <option value="en">English</option>
+              <option value="es">Spanish</option>
+              <option value="fr">French</option>
+              <option value="de">German</option>
+              <option value="zh">Chinese</option>
+              <option value="ja">Japanese</option>
+              <option value="ko">Korean</option>
+              <option value="pt">Portuguese</option>
+              <option value="ru">Russian</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="settings-group">
+          <h2>Blocking Categories</h2>
+
+          <div class="setting-item">
+            <div class="setting-info">
+              <label for="blockAds">Block Ads</label>
+              <p class="setting-description">Block advertisements and ad-related content</p>
+            </div>
+            <button class="toggle-switch" id="blockAds" role="switch" aria-checked="true">
+              <span class="toggle-thumb"></span>
+            </button>
+          </div>
+
+          <div class="setting-item">
+            <div class="setting-info">
+              <label for="blockTrackers">Block Trackers</label>
+              <p class="setting-description">Block tracking scripts, analytics, and fingerprinting</p>
+            </div>
+            <button class="toggle-switch" id="blockTrackers" role="switch" aria-checked="true">
+              <span class="toggle-thumb"></span>
+            </button>
+          </div>
+
+          <div class="setting-item">
+            <div class="setting-info">
+              <label for="blockMalware">Block Malware</label>
+              <p class="setting-description">Block known malware, phishing, and malicious domains</p>
+            </div>
+            <button class="toggle-switch" id="blockMalware" role="switch" aria-checked="true">
+              <span class="toggle-thumb"></span>
+            </button>
+          </div>
+
+          <div class="setting-item">
+            <div class="setting-info">
+              <label for="blockAnnoyances">Block Annoyances</label>
+              <p class="setting-description">Block anti-adblock warnings, popups, and overlays</p>
+            </div>
+            <button class="toggle-switch" id="blockAnnoyances" role="switch" aria-checked="true">
+              <span class="toggle-thumb"></span>
+            </button>
+          </div>
+
+          <div class="setting-item">
+            <div class="setting-info">
+              <label for="blockSocial">Block Social Media</label>
+              <p class="setting-description">Block social media buttons and widgets</p>
+            </div>
+            <button class="toggle-switch" id="blockSocial" role="switch" aria-checked="false">
+              <span class="toggle-thumb"></span>
+            </button>
+          </div>
+
+          <div class="setting-item">
+            <div class="setting-info">
+              <label for="blockCookieNotices">Block Cookie Notices</label>
+              <p class="setting-description">Block GDPR/cookie consent banners</p>
+            </div>
+            <button class="toggle-switch" id="blockCookieNotices" role="switch" aria-checked="true">
+              <span class="toggle-thumb"></span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <section class="tab-panel" id="tab-filter-lists">
+        <div class="settings-group">
+          <div class="group-header">
+            <h2>Filter Lists</h2>
+            <button class="btn-primary" id="addCustomListBtn">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="5" x2="12" y2="19"/>
+                <line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+              Add Custom List
+            </button>
+          </div>
+
+          <p class="group-description">
+            Filter lists contain rules that determine what gets blocked.
+            Enable or disable lists based on your needs.
+          </p>
+
+          <div class="filter-list-grid" id="filterListGrid"></div>
+
+          <div class="setting-item">
+            <div class="setting-info">
+              <label for="updateInterval">Auto-update Interval</label>
+              <p class="setting-description">How often to check for filter list updates</p>
+            </div>
+            <select class="select-input" id="updateInterval">
+              <option value="1">Every Hour</option>
+              <option value="6">Every 6 Hours</option>
+              <option value="12">Every 12 Hours</option>
+              <option value="24" selected>Daily</option>
+              <option value="168">Weekly</option>
+            </select>
+          </div>
+
+          <div class="setting-item">
+            <div class="setting-info">
+              <label>Last Updated</label>
+              <p class="setting-description" id="lastUpdatedText">Never</p>
+            </div>
+            <button class="btn-primary" id="updateNowBtn">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="23 4 23 10 17 10"/>
+                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+              </svg>
+              Update Now
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <section class="tab-panel" id="tab-allowlist">
+        <div class="settings-group">
+          <div class="group-header">
+            <h2>Allowlist</h2>
+            <button class="btn-primary" id="addAllowlistBtn">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="5" x2="12" y2="19"/>
+                <line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+              Add Site
+            </button>
+          </div>
+
+          <p class="group-description">
+            Sites on the allowlist will not have any content blocked.
+            You can add domains or specific URLs.
+          </p>
+
+          <div class="allowlist-container">
+            <div class="allowlist-input">
+              <input type="text" id="allowlistInput" placeholder="Enter domain (e.g., example.com) or full URL">
+              <button class="btn-primary" id="addAllowlistSubmitBtn">Add</button>
+            </div>
+
+            <ul class="allowlist-list" id="allowlistList"></ul>
+          </div>
+        </div>
+      </section>
+
+      <section class="tab-panel" id="tab-custom-rules">
+        <div class="settings-group">
+          <div class="group-header">
+            <h2>Custom Rules</h2>
+            <button class="btn-primary" id="addCustomRuleBtn">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="5" x2="12" y2="19"/>
+                <line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+              Add Rule
+            </button>
+          </div>
+
+          <p class="group-description">
+            Create custom blocking or allow rules using Adblock Plus syntax.
+            <a href="https://adblockplus.org/en/filter-cheatsheet" target="_blank" class="link">Learn more</a>
+          </p>
+
+          <div class="custom-rules-list" id="customRulesList"></div>
+
+          <div class="modal hidden" id="customRuleModal">
+            <div class="modal-backdrop"></div>
+            <div class="modal-content">
+              <div class="modal-header">
+                <h3 id="customRuleModalTitle">Add Custom Rule</h3>
+                <button class="modal-close" id="customRuleModalClose">&times;</button>
+              </div>
+              <form class="modal-form" id="customRuleForm">
+                <input type="hidden" id="customRuleId">
+                <div class="form-group">
+                  <label for="customRuleType">Rule Type</label>
+                  <select id="customRuleType">
+                    <option value="block">Block</option>
+                    <option value="allow">Allow (Exception)</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="customRulePattern">Filter Pattern</label>
+                  <input type="text" id="customRulePattern" placeholder="||example.com^" required>
+                  <p class="form-hint">Examples: ||example.com^, @@||example.com^$script, ||example.com^$domain=~allowed.com</p>
+                </div>
+                <div class="form-group">
+                  <label for="customRuleDomains">Domains (optional)</label>
+                  <input type="text" id="customRuleDomains" placeholder="example.com, another.com">
+                  <p class="form-hint">Comma-separated. Prefix with ~ to exclude.</p>
+                </div>
+                <div class="form-actions">
+                  <button type="button" class="btn-secondary" id="customRuleCancel">Cancel</button>
+                  <button type="submit" class="btn-primary">Save Rule</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="tab-panel" id="tab-cosmetic">
+        <div class="settings-group">
+          <div class="group-header">
+            <h2>Cosmetic Filters (Element Hiding)</h2>
+            <button class="btn-primary" id="addCosmeticFilterBtn">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="5" x2="12" y2="19"/>
+                <line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+              Add Filter
+            </button>
+          </div>
+
+          <p class="group-description">
+            Cosmetic filters hide elements on the page using CSS selectors.
+            These are applied after the page loads.
+          </p>
+
+          <div class="cosmetic-filters-list" id="cosmeticFiltersList"></div>
+
+          <div class="modal hidden" id="cosmeticFilterModal">
+            <div class="modal-backdrop"></div>
+            <div class="modal-content">
+              <div class="modal-header">
+                <h3 id="cosmeticFilterModalTitle">Add Cosmetic Filter</h3>
+                <button class="modal-close" id="cosmeticFilterModalClose">&times;</button>
+              </div>
+              <form class="modal-form" id="cosmeticFilterForm">
+                <input type="hidden" id="cosmeticFilterId">
+                <div class="form-group">
+                  <label for="cosmeticFilterSelector">CSS Selector</label>
+                  <input type="text" id="cosmeticFilterSelector" placeholder=".ad-banner, #sidebar-ad, div[id^='ad-']" required>
+                  <p class="form-hint">Standard CSS selector. Multiple selectors separated by commas.</p>
+                </div>
+                <div class="form-group">
+                  <label for="cosmeticFilterDomains">Domains (optional)</label>
+                  <input type="text" id="cosmeticFilterDomains" placeholder="example.com, another.com">
+                  <p class="form-hint">Leave empty to apply everywhere. Prefix with ~ to exclude.</p>
+                </div>
+                <div class="form-group">
+                  <label>
+                    <input type="checkbox" id="cosmeticFilterException">
+                    Exception Filter (Whitelist)
+                  </label>
+                </div>
+                <div class="form-actions">
+                  <button type="button" class="btn-secondary" id="cosmeticFilterCancel">Cancel</button>
+                  <button type="submit" class="btn-primary">Save Filter</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="tab-panel" id="tab-advanced">
+        <div class="settings-group">
+          <h2>Advanced Settings</h2>
+
+          <div class="setting-item">
+            <div class="setting-info">
+              <label for="strictBlocking">Strict Blocking Mode</label>
+              <p class="setting-description">Block requests more aggressively (may break some sites)</p>
+            </div>
+            <button class="toggle-switch" id="strictBlocking" role="switch" aria-checked="false">
+              <span class="toggle-thumb"></span>
+            </button>
+          </div>
+
+          <div class="setting-item">
+            <div class="setting-info">
+              <label for="blockWebRTC">Block WebRTC</label>
+              <p class="setting-description">Prevent WebRTC IP leaks (may break video calls)</p>
+            </div>
+            <button class="toggle-switch" id="blockWebRTC" role="switch" aria-checked="false">
+              <span class="toggle-thumb"></span>
+            </button>
+          </div>
+
+          <div class="setting-item">
+            <div class="setting-info">
+              <label for="blockRemoteFonts">Block Remote Fonts</label>
+              <p class="setting-description">Block third-party font requests for privacy</p>
+            </div>
+            <button class="toggle-switch" id="blockRemoteFonts" role="switch" aria-checked="false">
+              <span class="toggle-thumb"></span>
+            </button>
+          </div>
+
+          <div class="setting-item">
+            <div class="setting-info">
+              <label for="blockThirdPartyFrames">Block Third-Party Frames</label>
+              <p class="setting-description">Block iframes from third-party domains</p>
+            </div>
+            <button class="toggle-switch" id="blockThirdPartyFrames" role="switch" aria-checked="false">
+              <span class="toggle-thumb"></span>
+            </button>
+          </div>
+
+          <div class="setting-item">
+            <div class="setting-info">
+              <label for="debugMode">Debug Mode</label>
+              <p class="setting-description">Enable verbose logging in console</p>
+            </div>
+            <button class="toggle-switch" id="debugMode" role="switch" aria-checked="false">
+              <span class="toggle-thumb"></span>
+            </button>
+          </div>
+        </div>
+
+        <div class="settings-group">
+          <h2>Data Management</h2>
+
+          <div class="action-buttons">
+            <button class="btn-secondary" id="exportDataBtn">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7 10 12 15 17 10"/>
+                <line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
+              Export Settings
+            </button>
+            <button class="btn-secondary" id="importDataBtn">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="17 8 12 3 7 8"/>
+                <line x1="12" y1="3" x2="12" y2="15"/>
+              </svg>
+              Import Settings
+            </button>
+            <button class="btn-danger" id="resetAllBtn">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="16 18 22 12 16 6"/>
+                <polyline points="8 6 2 12 8 18"/>
+              </svg>
+              Reset All Settings
+            </button>
+          </div>
+
+          <div class="stats-summary" id="statsSummary">
+            <h3>Statistics</h3>
+            <div class="stats-grid" id="advancedStatsGrid"></div>
+            <button class="btn-secondary" id="resetStatsBtn">Reset Statistics</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="tab-panel" id="tab-help">
+        <div class="settings-group">
+          <h2>Help & Troubleshooting</h2>
+          <p style="color: var(--text-secondary); margin-bottom: 20px;">
+            Common issues and solutions. If you don't find your answer here, check the full help page.
+          </p>
+
+          <div class="help-quick-fixes">
+            <div class="help-card">
+              <h4>🔴 Service worker registration failed (Status 15)</h4>
+              <p>Go to <code>chrome://extensions/</code> → Details → Inspect views: Service worker → Check Console for errors. Reload the extension after fixing.</p>
+            </div>
+            <div class="help-card">
+              <h4>🔴 SyntaxError: Unexpected token ':'</h4>
+              <p>Usually a JavaScript syntax error in the background script. Open service worker DevTools to see the exact line.</p>
+            </div>
+            <div class="help-card">
+              <h4>🔴 Ads still showing</h4>
+              <p>Update filter lists, check allowlist, enable "Block Annoyances", or use "Block Element" picker.</p>
+            </div>
+            <div class="help-card">
+              <h4>🔴 Site broken / login fails</h4>
+              <p>Disable for this site in popup, or add to Allowlist. Try disabling "Strict Blocking" or "Block Third-Party Frames".</p>
+            </div>
+          </div>
+
+          <div style="margin-top: 24px; text-align: center;">
+            <button class="btn-primary" id="openFullHelpBtn">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+                <line x1="12" y1="17" x2="12.01" y2="17"/>
+              </svg>
+              Open Full Help Page
+            </button>
+            <button class="btn-secondary" id="openGitHubIssuesBtn" style="margin-left: 12px;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="8" x2="12" y2="12"/>
+                <line x1="12" y1="16" x2="12.01" y2="16"/>
+              </svg>
+              Report Bug on GitHub
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <section class="tab-panel" id="tab-about">
+        <div class="about-content">
+          <div class="about-header">
+            <div class="logo large">
+              <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <rect x="3" y="3" width="18" height="18" rx="2"/>
+                <line x1="9" y1="9" x2="15" y2="15"/>
+                <line x1="15" y1="9" x2="9" y2="15"/>
+              </svg>
+            </div>
+            <h2>AeroGuard</h2>
+            <p class="version">Version 1.0.0</p>
+          </div>
+
+          <p class="about-description">
+            A powerful, privacy-focused ad blocker built on Manifest V3.
+            Blocks ads, trackers, malware, and annoyances across the web.
+          </p>
+
+          <div class="about-links">
+            <a href="https://github.com/aeroguard/aeroguard" target="_blank" class="link-btn">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
+              </svg>
+              GitHub Repository
+            </a>
+            <a href="https://github.com/aeroguard/aeroguard/issues" target="_blank" class="link-btn">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="8" x2="12" y2="12"/>
+                <line x1="12" y1="16" x2="12.01" y2="16"/>
+              </svg>
+              Report Issue
+            </a>
+            <a href="https://github.com/aeroguard/aeroguard/wiki" target="_blank" class="link-btn">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+              </svg>
+              Documentation
+            </a>
+          </div>
+
+          <div class="credits">
+            <h3>Credits</h3>
+            <ul>
+              <li>Filter lists by <a href="https://easylist.to/" target="_blank">EasyList</a> and contributors</li>
+              <li>Icons by <a href="https://feathericons.com/" target="_blank">Feather Icons</a></li>
+              <li>Built with Manifest V3 for Chrome, Firefox, Edge, and Safari</li>
+            </ul>
+          </div>
+
+          <div class="license">
+            <p>Licensed under MIT License</p>
+            <p>Copyright &copy; 2025 AeroGuard Contributors</p>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <input type="file" id="importFileInput" accept=".json" style="display: none;">
+
+  <script type="module" src="options.js"></script>
+</body>
+</html>

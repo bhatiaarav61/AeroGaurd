@@ -1,0 +1,24 @@
+{
+  "name": "aeroguard-adblocker",
+  "version": "2.0.0",
+  "description": "AeroGuard - Advanced Ad Blocker for Manifest V3",
+  "main": "background/service-worker.js",
+  "type": "module",
+  "scripts": {
+    "test": "node tests/unit/abp-parser.test.js && node tests/integration/puppeteer.test.js",
+    "test:unit": "node tests/unit/abp-parser.test.js",
+    "test:integration": "node tests/integration/puppeteer.test.js",
+    "test:all": "npm run test:unit && npm run test:integration"
+  },
+  "devDependencies": {
+    "puppeteer": "^22.0.0"
+  },
+  "keywords": [
+    "adblocker",
+    "manifest-v3",
+    "declarative-net-request",
+    "privacy"
+  ],
+  "author": "AeroGuard Team",
+  "license": "MIT"
+}

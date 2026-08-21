@@ -1,0 +1,52 @@
+/* AeroGuard Content Script Styles */
+
+/* Element picker highlight */
+.adblocker-picker-highlight {
+  outline: 2px solid #4285f4 !important;
+  outline-offset: 2px !important;
+  box-shadow: 0 0 0 4px rgba(66, 133, 244, 0.3) !important;
+}
+
+/* Element picker overlay */
+#adblocker-picker-overlay {
+  cursor: crosshair !important;
+}
+
+/* Hide blocked elements */
+.adblocker-hidden {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  height: 0 !important;
+  width: 0 !important;
+  position: absolute !important;
+  left: -9999px !important;
+}
+
+/* Cosmetic filter styles */
+.adblocker-cosmetic-filter {
+  display: none !important;
+}
+
+/* Placeholder for blocked elements */
+.adblocker-placeholder {
+  background: rgba(0, 0, 0, 0.05) !important;
+  border: 1px dashed rgba(0, 0, 0, 0.1) !important;
+  min-height: 20px !important;
+  min-width: 20px !important;
+}
+
+/* Privacy protection indicator */
+.adblocker-privacy-active {
+  position: relative;
+}
+
+.adblocker-privacy-active::before {
+  content: '"'"'🛡'"'"';
+  position: absolute;
+  top: -20px;
+  right: -20px;
+  font-size: 16px;
+  opacity: 0.5;
+  pointer-events: none;
+}

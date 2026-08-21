@@ -1,0 +1,25 @@
+<svg width="128" height="128" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3498db;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#2980b9;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="shield" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffffff;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#ecf0f1;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="cross" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#e74c3c;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#c0392b;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <!-- Background -->
+  <rect width="128" height="128" rx="24" fill="url(#bg)"/>
+  <!-- Shield -->
+  <path d="M24 16 L104 16 L104 72 C104 94 94 110 64 112 C34 110 24 94 24 72 Z" fill="url(#shield)" stroke="#bdc3c7" stroke-width="1"/>
+  <!-- Cross (X) -->
+  <line x1="48" y1="40" x2="80" y2="72" stroke="url(#cross)" stroke-width="6" stroke-linecap="round"/>
+  <line x1="80" y1="40" x2="48" y2="72" stroke="url(#cross)" stroke-width="6" stroke-linecap="round"/>
+  <!-- Glossy highlight -->
+  <path d="M28 20 L100 20 L100 50 C100 65 90 78 64 80 C38 78 28 65 28 50 Z" fill="rgba(255,255,255,0.15)"/>
+</svg>
