@@ -37,7 +37,7 @@
     ],
     "max_number_of_enabled_rulesets": 1,
     "max_number_of_static_rules": 5000,
-    "max_number_of_dynamic_rules": 5000,
+    "max_number_of_dynamic_rules": 30000,
     "max_number_of_session_rules": 5000,
     "max_number_of_regex_rules": 100
   },

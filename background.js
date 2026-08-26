@@ -59,7 +59,7 @@ async function applyAllRules() {
   const filterRules = filterEngine.getDNRRules();
   allRules.push(...filterRules);
 
-  // 2. YouTube-specific rules (ALLOW first, then BLOCK)
+  // 2. YouTube-specific rules
   const ytRules = ytEngine.getDNRRules(ruleId);
   ruleId = ytEngine.nextId;
   allRules.push(...ytRules);
@@ -73,16 +73,29 @@ async function applyAllRules() {
   }));
   allRules.push(...custom);
 
-  // Apply in batches (DNR limit: 5000 per update)
+  // === PROPER BATCHING ===
+  const BATCH_SIZE = 5000; // Chrome DNR limit per update
+  const batches = [];
+  for (let i = 0; i < allRules.length; i += BATCH_SIZE) {
+    batches.push(allRules.slice(i, i + BATCH_SIZE));
+  }
+
+  // Clear existing rules first
   const existing = await chrome.declarativeNetRequest.getDynamicRules();
   const existingIds = existing.map(r => r.id);
+  if (existingIds.length > 0) {
+    await chrome.declarativeNetRequest.updateDynamicRules({ removeRuleIds: existingIds });
+  }
 
-  await chrome.declarativeNetRequest.updateDynamicRules({
-    removeRuleIds: existingIds,
-    addRules: allRules.slice(0, 5000)
-  });
+  // Apply in sequential batches
+  for (let i = 0; i < batches.length; i++) {
+    await chrome.declarativeNetRequest.updateDynamicRules({
+      addRules: batches[i]
+    });
+    console.log(`[AeroGuard] Applied batch ${i + 1}/${batches.length} (${batches[i].length} rules)`);
+  }
 
-  console.log('[AeroGuard] Applied', allRules.length, 'rules');
+  console.log(`[AeroGuard] Applied ${allRules.length} total rules in ${batches.length} batches`);
 
   // Notify YouTube tabs
   chrome.tabs.query({ url: '*://*.youtube.com/*' }, tabs => {

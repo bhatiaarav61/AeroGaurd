@@ -158,15 +158,32 @@ export class YouTubeEngine {
     if (this.mode === 'off') return;
 
     try {
-      if (this.mode === 'basic' || this.mode === 'standard' || this.mode === 'aggressive') {
-        await this.injectScriptlet(tabId, 'yt-network', frameId);
-        await this.injectScriptlet(tabId, 'yt-player', frameId);
-        await this.injectScriptlet(tabId, 'yt-unblock', frameId);
-      }
+      // ALWAYS inject all scriptlets on YouTube navigation
+      await this.injectScriptlet(tabId, 'yt-network', frameId);
+      await this.injectScriptlet(tabId, 'yt-player', frameId);
+      await this.injectScriptlet(tabId, 'yt-unblock', frameId);
+
       if (this.mode === 'aggressive') {
         await this.injectScriptlet(tabId, 'yt-ima', frameId);
       }
-    } catch (e) { console.debug('Scriptlet inject failed:', e.message); }
+
+      // Force nuclear cleanup on every navigation
+      await chrome.scripting.executeScript({
+        target: { tabId, frameIds: [frameId] },
+        func: () => window.__aeroguardYT?.emergencyUnblockPlayer?.(),
+        world: 'MAIN'
+      }).catch(() => {});
+
+      // Small delay then nuclear cleanup
+      setTimeout(() => {
+        chrome.scripting.executeScript({
+          target: { tabId, frameIds: [frameId] },
+          func: () => window.__aeroguardYT?.nuclearAdCleanup?.(),
+          world: 'MAIN'
+        }).catch(() => {});
+      }, 100);
+
+    } catch (e) { console.debug('Navigation scriptlet failed:', e.message); }
   }
 
   async injectScriptlet(tabId, name, frameId = 0) {
@@ -200,54 +217,35 @@ export class YouTubeEngine {
     let id = startId;
     const ytDomains = ['youtube.com', 'youtube-nocookie.com', 'www.youtube.com', 'm.youtube.com', 'music.youtube.com', 'tv.youtube.com', 'youtubeeducation.com', 'youtubekids.com'];
 
-    // ========== ALLOW RULES (Priority 2) — CRITICAL FOR PLAYBACK ==========
+    // ========== PRIORITY 2 - ALLOW (video MUST play) ==========
     const allows = [
-      // Video streams
       { url: '||googlevideo.com/videoplayback*', types: ['media'] },
       { url: '||*.googlevideo.com/*', types: ['media'] },
-
-      // Player JavaScript
       { url: '||s.ytimg.com/yts/jsbin/player-*', types: ['script'] },
       { url: '||s.ytimg.com/yts/jsbin/www-embed-player*', types: ['script'] },
       { url: '||s.ytimg.com/yts/jsbin/player-*-en_US.js', types: ['script'] },
       { url: '||s.ytimg.com/yts/jsbin/desktop-*-en_US.js', types: ['script'] },
-
-      // Thumbnails
       { url: '||i.ytimg.com/*', types: ['image'] },
       { url: '||yt3.ggpht.com/*', types: ['image'] },
       { url: '||yt3.googleusercontent.com/*', types: ['image'] },
       { url: '||s.ytimg.com/yts/img/*', types: ['image'] },
-
-      // Captions
       { url: '||youtube.com/api/timedtext*', types: ['xmlhttprequest', 'fetch'] },
-
-      // Player config & API
       { url: '||youtube.com/youtubei/v1/player*', types: ['xmlhttprequest', 'fetch'] },
       { url: '||youtube.com/youtubei/v1/browse*', types: ['xmlhttprequest', 'fetch'] },
       { url: '||youtube.com/youtubei/v1/next*', types: ['xmlhttprequest', 'fetch'] },
       { url: '||youtube.com/youtubei/v1/search*', types: ['xmlhttprequest', 'fetch'] },
       { url: '||youtube.com/youtubei/v1/guide*', types: ['xmlhttprequest', 'fetch'] },
-
-      // Live chat & comments
       { url: '||youtube.com/youtubei/v1/live_chat*', types: ['xmlhttprequest', 'fetch'] },
       { url: '||youtube.com/youtubei/v1/comment*', types: ['xmlhttprequest', 'fetch'] },
       { url: '||youtube.com/youtubei/v1/live_chat/get_live_chat*', types: ['xmlhttprequest', 'fetch'] },
-
-      // Embeds & TV
       { url: '||youtube.com/embed/*', types: ['sub_frame', 'xmlhttprequest', 'fetch'] },
       { url: '||youtube-nocookie.com/embed/*', types: ['sub_frame', 'xmlhttprequest', 'fetch'] },
       { url: '||tv.youtube.com/*', types: ['xmlhttprequest', 'fetch', 'subdocument'] },
       { url: '||music.youtube.com/*', types: ['xmlhttprequest', 'fetch', 'subdocument'] },
-
-      // Shorts
       { url: '||youtube.com/shorts/*', types: ['xmlhttprequest', 'fetch', 'subdocument'] },
       { url: '||youtube.com/youtubei/v1/shorts*', types: ['xmlhttprequest', 'fetch'] },
-
-      // Auth
       { url: '||youtube.com/youtubei/v1/account*', types: ['xmlhttprequest', 'fetch'] },
       { url: '||youtube.com/youtubei/v1/subscription*', types: ['xmlhttprequest', 'fetch'] },
-
-      // Logging
       { url: '||youtube.com/api/stats/watchtime*', types: ['xmlhttprequest', 'fetch'] },
       { url: '||youtube.com/api/stats/heartbeat*', types: ['xmlhttprequest', 'fetch'] },
       { url: '||youtube.com/api/stats/qoe*', types: ['xmlhttprequest', 'fetch'] }
@@ -257,67 +255,106 @@ export class YouTubeEngine {
       rules.push({ id: id++, priority: 2, action: { type: 'allow' }, condition: { urlFilter: a.url, resourceTypes: a.types, initiatorDomains: ytDomains } });
     }
 
-    // ========== BLOCK RULES (Priority 1) ==========
+    // ========== PRIORITY 1 - NUCLEAR BLOCK (catches everything) ==========
     const blocks = [
-      // Pre/mid/post-roll
+      // ─── Core Ad Endpoints ───
       '||youtube.com/api/stats/ads*', '||youtube.com/api/stats/qoe*', '||youtube.com/ptracking*',
       '||youtube.com/pagead/*', '||youtube.com/get_video_info*&adformat=*', '||youtube.com/get_video_info*&ad_type=*',
-      '||youtube.com/get_video_info*&ad3_module=*', '||youtube.com/get_video_info*&afv_*',
-      '||youtube.com/get_video_info*&vmap=*', '||youtube.com/get_video_info*&ad_tag=*',
-      '||youtube.com/get_video_info*&ad_url=*', '||youtube.com/get_video_info*&ad_break=*',
-      '||youtube.com/get_video_info*&ad_slot=*', '||youtube.com/get_video_info*&ad_pod=*',
-      '||youtube.com/annotations_invideo*', '||youtube.com/api/stats/watchtime*&ad*',
+      '||youtube.com/get_video_info*&ad3_module=*', '||youtube.com/get_video_info*&afv_*', '||youtube.com/get_video_info*&vmap=*',
+      '||youtube.com/get_video_info*&ad_tag=*', '||youtube.com/get_video_info*&ad_url=*', '||youtube.com/get_video_info*&ad_break=*',
+      '||youtube.com/get_video_info*&ad_slot=*', '||youtube.com/get_video_info*&ad_pod=*', '||youtube.com/annotations_invideo*',
+      '||youtube.com/api/stats/watchtime*&ad*', '||youtube.com/youtubei/v1/ad*', '||youtube.com/youtubei/v1/ad/get*',
+      '||youtube.com/youtubei/v1/ad/schedule*', '||youtube.com/youtubei/v1/ad/click*', '||youtube.com/youtubei/v1/ad/impression*',
+      '||youtube.com/youtubei/v1/ad/complete*', '||youtube.com/youtubei/v1/ad/skip*', '||youtube.com/youtubei/v1/ad/metadata*',
 
-      // VMAP/VAST
+      // ─── VMAP/VAST/DASH/HLS Manifests ───
       '||youtube.com/api/manifest/*&ad*', '||youtube.com/api/manifest/dash/*&ad*',
       '||youtube.com/api/manifest/hls/*&ad*', '||manifest.googlevideo.com/api/manifest/*&ad*',
-      '||manifest.googlevideo.com/api/manifest/dash/*&ad*',
+      '||manifest.googlevideo.com/api/manifest/dash/*&ad*', '||manifest.googlevideo.com/api/manifest/hls/*&ad*',
+      '||*.googlevideo.com/api/manifest/*&ad*', '||*.googlevideo.com/manifest/*&ad*',
 
-      // Google ad networks
+      // ─── Google Ad Networks (ALL) ───
       '||doubleclick.net/*', '||googlesyndication.com/*', '||googleadservices.com/*',
       '||googletagmanager.com/*', '||googletagservices.com/*', '||pagead2.googlesyndication.com/*',
       '||pubads.g.doubleclick.net/*', '||securepubads.g.doubleclick.net/*', '||adservice.google.com/*',
       '||adservice.google.de/*', '||adservice.google.fr/*', '||adservice.google.co.uk/*',
-      '||adservice.google.ca/*', '||adservice.google.au/*',
+      '||adservice.google.ca/*', '||adservice.google.au/*', '||googleads*.doubleclick.net/*',
 
-      // IMA SDK
-      '||imasdk.googleapis.com/*', '||imasdk.s3.amazonaws.com/*', '||www.gstatic.com/imasdk/*', '||cdn.jsdelivr.net/npm/google-ima*',
+      // ─── IMA SDK (Complete) ───
+      '||imasdk.googleapis.com/*', '||imasdk.s3.amazonaws.com/*', '||www.gstatic.com/imasdk/*',
+      '||cdn.jsdelivr.net/npm/google-ima*', '||imasdk*/*.js', '*imasdk*', '*ima3*', '*ima3_debug.js*',
 
-      // YouTube ad player JS
+      // ─── YouTube Ad Player JS ───
       '||s.ytimg.com/yts/jsbin/player-*ad*', '||s.ytimg.com/yts/jsbin/*ima*', '||s.ytimg.com/yts/jsbin/*ads*',
       '||s.ytimg.com/yts/jsbin/*ad3*', '||s.ytimg.com/yts/jsbin/*afv*', '||s.ytimg.com/yts/jsbin/*vmap*',
-      '||s.ytimg.com/yts/jsbin/ima3*',
+      '||s.ytimg.com/yts/jsbin/ima3*', '||s.ytimg.com/yts/jsbin/ads_*', '||s.ytimg.com/yts/jsbin/ad3_*',
 
-      // YouTube ad subdomains
+      // ─── YouTube Ad Subdomains ───
       '||ads.youtube.com/*', '||advertising.youtube.com/*', '||partneradvertising.youtube.com/*',
       '||sponsorships.youtube.com/*', '||paidcontent.youtube.com/*', '||advertiser.youtube.com/*',
-      '||ads-pa.googleapis.com/*',
+      '||ads-pa.googleapis.com/*', '||youtubeads.googleapis.com/*', '||youtubei.googleapis.com/*',
 
-      // Tracking/conversion
+      // ─── Tracking/Conversion (ALL) ───
       '||googleads.g.doubleclick.net/pagead/viewthroughconversion/*', '||googleads.g.doubleclick.net/pagead/conversion/*',
       '||www.googleadservices.com/pagead/conversion/*', '||googleads.g.doubleclick.net/pagead/conversion_async/*',
       '||doubleclick.net/activity/*', '||fls.doubleclick.net/activityi/*', '||ad.doubleclick.net/activity/*',
       '||googleads4.g.doubleclick.net/pcs/view*', '||googleads4.g.doubleclick.net/pcs/activeview*',
+      '||googleads.g.doubleclick.net/pagead/gen_204*', '||googleads.g.doubleclick.net/pagead/gen_204?*',
 
-      // Internal ad endpoints (2024-2025)
+      // ─── Internal Ad Endpoints (2024-2025) ───
       '||youtube.com/youtubei/v1/ad*', '||youtube.com/youtubei/v1/ad/get*', '||youtube.com/youtubei/v1/ad/schedule*',
       '||youtube.com/youtubei/v1/ad/click*', '||youtube.com/youtubei/v1/ad/impression*', '||youtube.com/youtubei/v1/ad/complete*',
+      '||youtube.com/youtubei/v1/ad/skip*', '||youtube.com/youtubei/v1/ad/metadata*', '||youtube.com/youtubei/v1/ad/break*',
+      '||youtube.com/youtubei/v1/ad/pod*', '||youtube.com/youtubei/v1/ad/slot*', '||youtube.com/youtubei/v1/ad/break/*',
 
-      // Overlay/companion/banner
-      '||youtube.com/api/overlay*', '||youtube.com/api/companion*', '||youtube.com/api/banner*', '||youtube.com/api/instream*',
+      // ─── Overlay/Companion/Banner/Instream ───
+      '||youtube.com/api/overlay*', '||youtube.com/api/companion*', '||youtube.com/api/banner*',
+      '||youtube.com/api/instream*', '||youtube.com/api/annotation*', '||youtube.com/api/card*',
 
-      // Shorts ads
+      // ─── Shorts Ads ───
       '||youtube.com/youtubei/v1/shorts/ad*', '||youtube.com/youtubei/v1/reel/ad*',
+      '||youtube.com/youtubei/v1/shorts/*ad*', '||youtube.com/shorts/*&ad*',
 
-      // Live ads
+      // ─── Live Stream Ads ───
       '||youtube.com/youtubei/v1/live/ad*', '||youtube.com/youtubei/v1/live_chat/ad*',
+      '||youtube.com/live_chat*ad*', '||youtube.com/youtubei/v1/live/*ad*',
 
-      // Feed promoted
-      '||youtube.com/youtubei/v1/browse*&ad*', '||youtube.com/youtubei/v1/feed/ad*'
+      // ─── Feed/Discovery Promoted Content ───
+      '||youtube.com/youtubei/v1/browse*&ad*', '||youtube.com/youtubei/v1/feed/ad*',
+      '||youtube.com/youtubei/v1/next*&ad*', '||youtube.com/youtubei/v1/search*&ad*',
+      '||youtube.com/youtubei/v1/guide*&ad*',
+
+      // ─── Masthead & Discovery Ads ───
+      '||youtube.com/youtubei/v1/masthead*', '||youtube.com/youtubei/v1/promoted*',
+      '||youtube.com/youtubei/v1/rich_item*ad*', '||youtube.com/youtubei/v1/continuation*ad*',
+      '||youtube.com/youtubei/v1/browse*promoted*', '||youtube.com/youtubei/v1/browse*sponsored*',
+
+      // ─── get_video_info Ad Params ───
+      '||youtube.com/get_video_info*&adformat=*', '||youtube.com/get_video_info*&ad_type=*',
+      '||youtube.com/get_video_info*&ad3_module=*', '||youtube.com/get_video_info*&afv_*',
+      '||youtube.com/get_video_info*&vmap=*', '||youtube.com/get_video_info*&ad_tag=*',
+      '||youtube.com/get_video_info*&ad_url=*', '||youtube.com/get_video_info*&ad_break=*',
+      '||youtube.com/get_video_info*&ad_slot=*', '||youtube.com/get_video_info*&ad_pod=*',
+      '||youtube.com/get_video_info*&ad3=*', '||youtube.com/get_video_info*&ad_flags=*',
+
+      // ─── AdSense/AdExchange/AdMob on YouTube ───
+      '||pagead2.googlesyndication.com/pagead/ads*', '||pagead2.googlesyndication.com/pagead/js/adsbygoogle.js',
+      '||pagead2.googlesyndication.com/pagead/managed/js/adsense/m202*', '||pagead2.googlesyndication.com/pagead/gen_204*',
+
+      // ─── YouTube Mobile/TV/Embedded ───
+      '||m.youtube.com/api/stats/ads*', '||m.youtube.com/pagead/*', '||tv.youtube.com/*ad*',
+      '||youtubeeducation.com/*ad*', '||youtubekids.com/*ad*', '||youtube.com/tv*ad*',
+      '||youtube.com/api/mobile_ads*', '||youtube.com/api/tv/*ad*',
+      '||youtube.com/youtubei/v1/tv/ad*', '||youtube.com/youtubei/v1/music/ad*',
+
+      // ─── Ad Parameters in URLs ───
+      '*&adformat=*', '*&ad_type=*', '*&ad3_module=*', '*&afv_*', '*&vmap=*', '*&ad_tag=*',
+      '*&ad_url=*', '*&ad_break=*', '*&ad_slot=*', '*&ad_pod=*', '*&ad3=*', '*&ad_flags=*',
+      '*&ad_creative=*', '*&ad_network=*', '*&ad_client=*', '*&ad_channel=*', '*&ad_region=*'
     ];
 
     for (const b of blocks) {
-      rules.push({ id: id++, priority: 1, action: { type: 'block' }, condition: { urlFilter: b, resourceTypes: ['xmlhttprequest', 'fetch', 'subdocument', 'image', 'script', 'stylesheet', 'ping', 'media'], initiatorDomains: ytDomains } });
+      rules.push({ id: id++, priority: 1, action: { type: 'block' }, condition: { urlFilter: b, resourceTypes: ['xmlhttprequest', 'fetch', 'subdocument', 'image', 'script', 'stylesheet', 'ping', 'media', 'websocket', 'other', 'csp_report', 'cors'], initiatorDomains: ytDomains } });
     }
 
     this.nextId = id;
