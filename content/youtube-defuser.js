@@ -1,3 +1,4 @@
+// content/youtube-defuser.js — YouTube-specific ad defuser (MAIN world at document_start)
 (() => {
   'use strict';
 
@@ -13,23 +14,22 @@
 
   let rawPlayerResponse = window.ytInitialPlayerResponse;
   Object.defineProperty(window, 'ytInitialPlayerResponse', {
-    get: () => sanitizeJSON(rawPlayerResponse),
+    get: () => rawPlayerResponse,
     set: (val) => { rawPlayerResponse = sanitizeJSON(val); },
     configurable: true
-  };
+  });
 
   // 2. Intercept YouTube API fetch calls
   const originalFetch = window.fetch;
   window.fetch = async function (...args) {
-    const url = typeof args[0] === 'string' ? args[0] : args[0]?.url;
     const response = await originalFetch.apply(this, args);
+    const url = typeof args[0] === 'string' ? args[0] : args[0]?.url || '';
 
-    if (url && (url.includes('/youtubei/v1/player') || url.includes('/youtubei/v1/next'))) {
+    if (url.includes('/youtubei/v1/player') || url.includes('/youtubei/v1/next')) {
+      const clone = response.clone();
       try {
-        const clone = response.clone();
         const data = await clone.json();
         const cleanData = sanitizeJSON(data);
-
         return new Response(JSON.stringify(cleanData), {
           status: response.status,
           statusText: response.statusText,
@@ -42,26 +42,61 @@
     return response;
   };
 
-  // 3. High-Speed Video Ad Auto-Skipper & Speed-up Engine
-  setInterval(() => {
-    const video = document.querySelector('video');
-    const isAdShowing = document.querySelector('.ad-interrupting, .html5-ad-space, .ytp-ad-player-overlay, .ytp-ad-text');
+  // 3. Intercept XMLHttpRequest for YouTube API
+  const originalXHROpen = window.XMLHttpRequest.prototype.open;
+  const originalXHRSend = window.XMLHttpRequest.prototype.send;
 
-    if (isAdShowing && video) {
-      video.muted = true;
-      video.playbackRate = 16.0;
-      if (isFinite(video.duration) && video.duration > 0) {
-        video.currentTime = video.duration;
-      }
+  window.XMLHttpRequest.prototype.open = function(method, url) {
+    this._isYouTubeAPI = url && (url.includes('/youtubei/v1/player') || url.includes('/youtubei/v1/next'));
+    return originalXHROpen.apply(this, arguments);
+  };
 
-      const skipBtn = document.querySelector('.ytp-ad-skip-button, .ytp-ad-skip-button-modern, .ytp-skip-ad-button');
-      if (skipBtn) {
-        skipBtn.click();
-      }
+  window.XMLHttpRequest.prototype.send = function(body) {
+    if (this._isYouTubeAPI) {
+      const originalOnReadyStateChange = this.onreadystatechange;
+      this.onreadystatechange = function() {
+        if (this.readyState === 4 && this.status === 200) {
+          try {
+            const json = JSON.parse(this.responseText);
+            const cleaned = sanitizeJSON(json);
+            Object.defineProperty(this, 'responseText', {
+              value: JSON.stringify(cleaned),
+              writable: true,
+              configurable: true
+            });
+            Object.defineProperty(this, 'response', {
+              value: JSON.stringify(cleaned),
+              writable: true,
+              configurable: true
+            });
+          } catch (e) {}
+        }
+        if (originalOnReadyStateChange) originalOnReadyStateChange.apply(this, arguments);
+      };
     }
+    return originalXHRSend.apply(this, arguments);
+  };
 
-    // Hide residual YouTube banner ads and side overlays
-    const adElements = document.querySelectorAll('ytd-ad-slot-renderer, #masthead-ad, ytd-promoted-sparkles-web-renderer');
-    adElements.forEach(el => el.remove());
-  }, 100);
+  // 4. Remove anti-adblock overlays automatically
+  const observer = new MutationObserver(() => {
+    const popup = document.querySelector('ytd-enforcement-message-view-model, tp-yt-paper-dialog:has(#dismiss-button)');
+    if (popup) {
+      popup.remove();
+      const video = document.querySelector('video');
+      if (video && video.paused) video.play();
+    }
+  });
+
+  observer.observe(document.documentElement, { childList: true, subtree: true });
+
+  // Initial run
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+      sanitizeJSON(window.ytInitialPlayerResponse);
+    });
+  } else {
+    sanitizeJSON(window.ytInitialPlayerResponse);
+  }
+
+  console.log('[AeroGuard] YouTube anti-adblock defuser active');
 })();

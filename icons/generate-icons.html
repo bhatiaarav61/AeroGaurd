@@ -1,89 +1,68 @@
 <!DOCTYPE html>
 <html>
-<head>
-  <meta charset="utf-8">
-  <title>AeroGuard Icon Generator</title>
-  <style>
-    body { font-family: system-ui; padding: 20px; background: #0f172a; color: #f8fafc; }
-    .icon-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-top: 20px; }
-    .icon-item { text-align: center; }
-    canvas { border: 2px solid #334155; border-radius: 8px; background: #0f172a; }
-    button { padding: 12px 24px; background: #38bdf8; color: #0f172a; border: none; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 16px; }
-    button:hover { background: #0ea5e9; }
-    h1 { color: #38bdf8; }
-  </style>
+<head><title>Generate Icons</title>
+<style>
+  body { font-family: system-ui; padding: 20px; max-width: 600px; margin: 0 auto; }
+  canvas { border: 1px solid #ddd; margin: 10px 0; background: #f0f0f0; }
+  button { padding: 12px 24px; background: #667eea; color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; margin: 5px; }
+  button:hover { background: #5568d3; }
+</style>
 </head>
 <body>
-  <h1>AeroGuard Icon Generator</h1>
-  <p>Click "Generate All Icons" to create PNG files, then right-click each canvas → "Save image as..."</p>
-  <button onclick="generateAll()">Generate All Icons</button>
-  <div class="icon-grid" id="icons"></div>
-
+  <h1>Generate AeroGuard Icons</h1>
+  <p>Click "Generate All" then right-click each canvas → "Save image as..." to icons/ folder</p>
+  <button onclick="generateAll()">Generate All Sizes</button>
+  <div id="sizes"></div>
   <script>
+    const sizes = [16, 32, 48, 128];
     function drawIcon(ctx, size) {
-      // Background
-      ctx.fillStyle = '#0f172a';
-      ctx.fillRect(0, 0, size, size);
-
-      // Shield shape
-      ctx.fillStyle = '#38bdf8';
+      const cx = size/2, cy = size/2, r = size * 0.38;
+      // Shield background
       ctx.beginPath();
-      ctx.moveTo(size/2, size*0.04);
-      ctx.lineTo(size*0.125, size*0.21);
-      ctx.lineTo(size*0.125, size*0.71);
-      ctx.bezierCurveTo(size*0.125, size*0.94, size*0.5, size*0.98, size/2, size*0.96);
-      ctx.bezierCurveTo(size*0.875, size*0.98, size*0.875, size*0.94, size*0.875, size*0.71);
-      ctx.lineTo(size*0.875, size*0.21);
-      ctx.closePath();
+      ctx.moveTo(cx, cy - r);
+      ctx.bezierCurveTo(cx + r, cy - r, cx + r, cy + r * 0.5, cx, cy + r);
+      ctx.bezierCurveTo(cx - r, cy + r * 0.5, cx - r, cy - r, cx, cy - r);
+      ctx.fillStyle = 'linear-gradient(135deg, #667eea, #764ba2)';
       ctx.fill();
-
-      // Inner accent
-      ctx.fillStyle = '#0f172a';
+      // Checkmark
+      ctx.strokeStyle = 'white';
+      ctx.lineWidth = size * 0.1;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
       ctx.beginPath();
-      ctx.moveTo(size/2, size*0.12);
-      ctx.lineTo(size*0.3, size*0.3);
-      ctx.lineTo(size*0.3, size*0.62);
-      ctx.bezierCurveTo(size*0.3, size*0.8, size/2, size*0.85, size/2, size*0.83);
-      ctx.bezierCurveTo(size*0.7, size*0.85, size*0.7, size*0.8, size*0.7, size*0.62);
-      ctx.lineTo(size*0.7, size*0.3);
-      ctx.closePath();
+      ctx.moveTo(cx - r * 0.35, cy);
+      ctx.lineTo(cx - r * 0.05, cy + r * 0.3);
+      ctx.lineTo(cx + r * 0.4, cy - r * 0.35);
+      ctx.stroke();
+      // Wings
+      ctx.fillStyle = 'rgba(255,255,255,0.2)';
+      ctx.beginPath();
+      ctx.ellipse(cx - r * 0.5, cy, r * 0.25, r * 0.4, -Math.PI/4, 0, Math.PI*2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.ellipse(cx + r * 0.5, cy, r * 0.25, r * 0.4, Math.PI/4, 0, Math.PI*2);
       ctx.fill();
     }
-
     function generateAll() {
-      const container = document.getElementById('icons');
+      const container = document.getElementById('sizes');
       container.innerHTML = '';
-      const sizes = [16, 32, 48, 128];
-
       sizes.forEach(size => {
-        const div = document.createElement('div');
-        div.className = 'icon-item';
-
         const canvas = document.createElement('canvas');
-        canvas.width = size;
-        canvas.height = size;
+        canvas.width = canvas.height = size;
         const ctx = canvas.getContext('2d');
         drawIcon(ctx, size);
-
         const label = document.createElement('div');
-        label.textContent = `${size}x${size}`;
+        label.textContent = `${size}x${size}px`;
         label.style.marginTop = '8px';
-        label.style.color = '#94a3b8';
-
-        const downloadBtn = document.createElement('button');
-        downloadBtn.textContent = `Save ${size}x${size}.png`;
-        downloadBtn.style.marginTop = '8px';
-        downloadBtn.onclick = () => {
+        const btn = document.createElement('button');
+        btn.textContent = `Download ${size}px`;
+        btn.onclick = () => {
           const link = document.createElement('a');
           link.download = `icon-${size}.png`;
           link.href = canvas.toDataURL('image/png');
           link.click();
         };
-
-        div.appendChild(canvas);
-        div.appendChild(label);
-        div.appendChild(downloadBtn);
-        container.appendChild(div);
+        container.append(canvas, label, btn, document.createElement('hr'));
       });
     }
   </script>

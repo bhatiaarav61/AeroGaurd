@@ -1,0 +1,237 @@
+! ABP Filter List Test Vectors - Full Spec Coverage
+! Generated for 100% coverage testing
+
+! ============================================================
+! BASIC BLOCKING RULES
+! ============================================================
+||example.com^
+||example.com^$script
+||example.com^$image,stylesheet
+||example.com^$third-party
+||example.com^$domain=example.com
+||example.com^$domain=example.com|~sub.example.com
+||example.com^$domain=example.com,~sub.example.com
+||example.com^$~third-party
+||example.com^$match-case
+||example.com^$collapse
+||example.com^$important
+||example.com^$cookie
+||example.com^$csp=script-src 'self'
+||example.com^$redirect=https://safe.com
+||example.com^$removeparam=tracking
+||example.com^$redirect-rule=https://safe.com
+||example.com^$xmlhttprequest,subdocument,font,object,media,websocket,csp_report,ping
+||example.com^$xhr,other
+
+! ============================================================
+! EXCEPTION RULES (@@)
+! ============================================================
+@@||example.com^
+@@||example.com^$script
+@@||example.com^$domain=example.com
+@@||example.com^$important
+@@||example.com^$third-party
+@@||example.com^$match-case
+
+! ============================================================
+! ELEMENT HIDING RULES (##)
+! ============================================================
+example.com##.ad-banner
+example.com,other.com##.ad-banner
+~example.com##.ad-banner
+example.com##div.ad:has(.sponsor)
+##.global-ad
+domain.com##.ad-banner
+
+! ============================================================
+! ELEMENT HIDING EXCEPTIONS (#@##)
+! ============================================================
+example.com#@##.ad-banner
+example.com,other.com#@##.ad-banner
+~example.com#@##.ad-banner
+#@##.global-ad-exception
+
+! ============================================================
+! EXTENDED CSS (#?#)
+! ============================================================
+example.com#?#.ad-banner:-abp-has(.sponsor)
+example.com#?#div:contains(Advertisement)
+example.com#?#.ad:-abp-properties(background-color: red)
+#?#.global-ad:-abp-has(.sponsor)
+
+! ============================================================
+! SCRIPTLET RULES (#%#)
+! ============================================================
+example.com#%#log(message)
+example.com#%#log("hello", 123)
+example.com#%#json-prune("$.ads")
+example.com#%#prevent-xhr("example.com/ads")
+example.com#%#set-cookie("name", "value", 3600)
+example.com#%#abort-on-property-read("ads")
+example.com#%#abort-current-inline-script("ad")
+example.com#%#add-event-listener("load", "handler")
+#%#log("global scriptlet")
+
+! ============================================================
+! HTML FILTERING RULES (##^pattern$)
+! ============================================================
+example.com##^<div class="ad">$
+example.com##^<script src="ad.js"></script>$
+##^<div class="global-ad">$
+
+! ============================================================
+! REGEX PATTERNS
+! ============================================================
+/example\.com/
+/ads?\.example\.com/i
+/banner|advert|sponsor/i
+/^https?:\/\/.*\/ads?\//
+
+! ============================================================
+! ANCHOR PATTERNS
+! ============================================================
+|http://example.com/ad.js|
+||example.com^
+example.com/ad.js|
+|http://example.com/ad.js
+
+! ============================================================
+! COMMENTS AND METADATA
+! ============================================================
+! This is a comment line
+! Another comment with $ and ## characters
+
+[Adblock Plus 2.0]
+! Title: Test Filter List
+! Version: 1.0
+! Expires: 2025-12-31 12:00:00
+! Homepage: https://example.com
+! License: MIT
+
+[Adblock]
+! Title: Another List
+! Checksum: abc123
+
+! ============================================================
+! EDGE CASES
+! ============================================================
+
+! Empty lines (should be skipped)
+
+
+! Lines with only whitespace
+
+! Very long rule with many options
+||example.com^$script,image,stylesheet,xmlhttprequest,subdocument,font,object,media,websocket,csp_report,ping,third-party,domain=example.com|~sub.example.com,match-case,collapse,important,cookie,removeparam=tracking,redirect=https://safe.com,csp=script-src 'self'
+
+! Domain with special characters
+sub.domain.example.com##.ad
+*.example.com##.ad
+|http://*.example.com/ad.js|
+
+! Complex selectors
+example.com##div.ad > span:not(.allowed)
+example.com##.ad:has(+ .sponsor)
+example.com##.ad:-abp-has(.inner)
+
+! Scriptlet with complex arguments
+example.com#%#json-prune("$.data.ads[*]", "$.data.sponsored[*]")
+example.com#%#log("message", 123, true, null, {"key": "value"})
+
+! Special characters in patterns
+||example.com^$domain=example.com|example.org|~sub.example.com
+||example.com^$domain=example.com,example.org,~sub.example.com
+
+! Negated domain in domain list
+||example.com^$domain=~sub.example.com
+||example.com^$domain=example.com|~sub.example.com|~other.example.com
+
+! ============================================================
+! ABBREVIATED OPTIONS (as per spec)
+! ============================================================
+||example.com^$3p        ! third-party shorthand
+||example.com^$~3p       ! ~third-party shorthand
+||example.com^$~image    ! negated type
+
+! ============================================================
+! ALL RESOURCE TYPES
+! ============================================================
+||example.com^$script
+||example.com^$image
+||example.com^$stylesheet
+||example.com^$xmlhttprequest
+||example.com^$subdocument
+||example.com^$font
+||example.com^$object
+||example.com^$media
+||example.com^$websocket
+||example.com^$csp_report
+||example.com^$ping
+||example.com^$xhr
+||example.com^$other
+
+! ============================================================
+! COMBINATIONS
+! ============================================================
+||example.com^$script,domain=example.com,third-party
+||example.com^$image,~third-party,domain=example.com|~sub.example.com
+||example.com^$stylesheet,match-case,collapse,important
+@@||example.com^$script,domain=example.com,important
+
+! ============================================================
+! UNICODE AND SPECIAL CHARS
+! ============================================================
+||пример.рф^
+||例子.中国^
+||example.com^$domain=пример.рф|~под.пример.рф
+
+! ============================================================
+! MAX ERROR RECOVERY TESTS
+! ============================================================
+||good1.com^
+invalid line with no pattern
+||good2.com^
+another bad line $$$
+||good3.com^
+malformed ## not a real rule
+||good4.com^
+
+! ============================================================
+! MULTIPLE RULES PER LINE (should not happen but handle gracefully)
+! ============================================================
+||example.com^ ||another.com^
+||example.com^!comment after
+
+! ============================================================
+! WHITESPACE HANDLING
+! ============================================================
+  ||example.com^
+||example.com^
+  ||example.com^
+
+! ============================================================
+! DOMAIN LISTS IN ELEMENT HIDING
+! ============================================================
+example.com,sub.example.com,other.org##.ad
+~example.com,~sub.example.com##.ad
+example.com,~sub.example.com##.ad
+
+! ============================================================
+! SCRIPTLET ARGUMENT TYPES
+! ============================================================
+example.com#%#func("string")
+example.com#%#func(123)
+example.com#%#func(true)
+example.com#%#func(false)
+example.com#%#func(null)
+example.com#%#func({"key": "value"})
+example.com#%#func([1, 2, 3])
+example.com#%#func(arg1, arg2, arg3)
+example.com#%#func("hello, world", "another, string")
+
+! ============================================================
+! ALL OPTION TYPES COMBINED
+! ============================================================
+||example.com^$domain=example.com|~sub.example.com,third-party,script,image,stylesheet,xmlhttprequest,subdocument,font,object,media,websocket,csp_report,ping,match-case,collapse,redirect=https://safe.com,removeparam=tracking,csp=script-src 'self',cookie,important
+
+! EOF

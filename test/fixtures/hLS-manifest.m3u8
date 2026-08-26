@@ -1,0 +1,60 @@
+#EXTM3U
+#EXT-X-VERSION:7
+#EXT-X-TARGETDURATION:10
+#EXT-X-MEDIA-SEQUENCE:0
+
+# Main content segments
+#EXTINF:10.0,
+segment0.ts
+#EXTINF:10.0,
+segment1.ts
+
+# Ad break - EXT-X-DATERANGE with ad attributes
+#EXT-X-DATERANGE:ID="ad-break-1",CLASS="com.apple.hls.ad",START-DATE="2024-01-15T10:30:00Z",PLACEMENT-OPPORTUNITY=YES,DURATION=30.0,SCTE35-OUT="0xFC302500000000000000FFFF0000F015"
+#EXTINF:10.0,
+ad-preroll-1.ts
+#EXTINF:10.0,
+ad-preroll-2.ts
+#EXTINF:10.0,
+ad-preroll-3.ts
+#EXT-X-DATERANGE:ID="ad-break-1",END-DATE="2024-01-15T10:30:30Z"
+
+# Back to content
+#EXTINF:10.0,
+segment2.ts
+#EXTINF:10.0,
+segment3.ts
+
+# Mid-roll ad
+#EXT-X-DATERANGE:ID="ad-break-2",CLASS="SCTE35",START-DATE="2024-01-15T10:35:00Z",PLACEMENT-OPPORTUNITY=YES,DURATION=60.0,X-AD="true",X-SCTE35="0xFC302500000000000000FFFF0000F015"
+#EXTINF:10.0,
+ad-midroll-1.ts
+#EXTINF:10.0,
+ad-midroll-2.ts
+#EXTINF:10.0,
+ad-midroll-3.ts
+#EXTINF:10.0,
+ad-midroll-4.ts
+#EXTINF:10.0,
+ad-midroll-5.ts
+#EXTINF:10.0,
+ad-midroll-6.ts
+#EXT-X-DATERANGE:ID="ad-break-2",END-DATE="2024-01-15T10:36:00Z"
+
+# More content
+#EXTINF:10.0,
+segment4.ts
+#EXTINF:10.0,
+segment5.ts
+
+# Post-roll ad
+#EXT-X-DATERANGE:ID="ad-break-3",CLASS="com.apple.hls.ad",START-DATE="2024-01-15T10:40:00Z",PLACEMENT-OPPORTUNITY=YES,DURATION=15.0,X-AD="true",PREROLL="false",MIDROLL="false",POSTROLL="true"
+#EXTINF:5.0,
+ad-postroll-1.ts
+#EXTINF:5.0,
+ad-postroll-2.ts
+#EXTINF:5.0,
+ad-postroll-3.ts
+
+# End
+#EXT-X-ENDLIST

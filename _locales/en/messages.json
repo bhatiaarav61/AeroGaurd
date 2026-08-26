@@ -1,10 +1,434 @@
 {
   "extensionName": {
-    "message": "AeroGuard Brave-Ultra Shield",
-    "description": "Extension display name"
+    "message": "AeroGuard",
+    "description": "Name of the extension"
   },
   "extensionDescription": {
-    "message": "Enterprise-grade ad-blocker, scriptlet defuser, and anti-fingerprinting engine for Manifest V3.",
-    "description": "Extension description"
+    "message": "A powerful, privacy-focused ad blocker that stops ads, trackers, malware, and annoyances — making the web cleaner, faster, and safer.",
+    "description": "Description of the extension"
+  },
+  "popupTitle": {
+    "message": "AeroGuard",
+    "description": "Title shown in popup"
+  },
+  "protectionActive": {
+    "message": "Active",
+    "description": "Protection status - active"
+  },
+  "protectionInactive": {
+    "message": "Inactive",
+    "description": "Protection status - inactive"
+  },
+  "enabled": {
+    "message": "Enabled",
+    "description": "Site toggle - enabled"
+  },
+  "disabled": {
+    "message": "Disabled",
+    "description": "Site toggle - disabled"
+  },
+  "blockedCount": {
+    "message": "Blocked",
+    "description": "Stat label - blocked items"
+  },
+  "trackersBlocked": {
+    "message": "Trackers",
+    "description": "Stat label - trackers blocked"
+  },
+  "adsBlocked": {
+    "message": "Ads",
+    "description": "Stat label - ads blocked"
+  },
+  "malwareBlocked": {
+    "message": "Malware",
+    "description": "Stat label - malware blocked"
+  },
+  "blockElement": {
+    "message": "Block Element",
+    "description": "Button to start element picker"
+  },
+  "reportAd": {
+    "message": "Report Ad",
+    "description": "Button to report unblocked ad"
+  },
+  "filterLists": {
+    "message": "Filter Lists",
+    "description": "Filter lists section title"
+  },
+  "updateLists": {
+    "message": "Update Lists",
+    "description": "Button to update filter lists"
+  },
+  "settings": {
+    "message": "Settings",
+    "description": "Footer button - settings"
+  },
+  "help": {
+    "message": "Help",
+    "description": "Footer button - help"
+  },
+  "generalSettings": {
+    "message": "General Settings",
+    "description": "Settings group title"
+  },
+  "enableAdBlocker": {
+    "message": "Enable AeroGuard",
+    "description": "Main toggle label"
+  },
+  "masterSwitchDesc": {
+    "message": "Master switch to enable or disable all ad blocking",
+    "description": "Main toggle description"
+  },
+  "showBadge": {
+    "message": "Show Badge Count",
+    "description": "Badge toggle label"
+  },
+  "showBadgeDesc": {
+    "message": "Display number of blocked items on extension icon",
+    "description": "Badge toggle description"
+  },
+  "showNotifications": {
+    "message": "Show Notifications",
+    "description": "Notifications toggle label"
+  },
+  "showNotificationsDesc": {
+    "message": "Display notifications when filter lists are updated",
+    "description": "Notifications toggle description"
+  },
+  "theme": {
+    "message": "Theme",
+    "description": "Theme select label"
+  },
+  "themeDesc": {
+    "message": "Choose the appearance of the extension",
+    "description": "Theme select description"
+  },
+  "themeSystem": {
+    "message": "System Default",
+    "description": "Theme option - system"
+  },
+  "themeLight": {
+    "message": "Light",
+    "description": "Theme option - light"
+  },
+  "themeDark": {
+    "message": "Dark",
+    "description": "Theme option - dark"
+  },
+  "language": {
+    "message": "Language",
+    "description": "Language select label"
+  },
+  "languageDesc": {
+    "message": "Extension interface language",
+    "description": "Language select description"
+  },
+  "blockingCategories": {
+    "message": "Blocking Categories",
+    "description": "Blocking categories group title"
+  },
+  "blockAds": {
+    "message": "Block Ads",
+    "description": "Block ads toggle label"
+  },
+  "blockAdsDesc": {
+    "message": "Block advertisements and ad-related content",
+    "description": "Block ads toggle description"
+  },
+  "blockTrackers": {
+    "message": "Block Trackers",
+    "description": "Block trackers toggle label"
+  },
+  "blockTrackersDesc": {
+    "message": "Block tracking scripts, analytics, and fingerprinting",
+    "description": "Block trackers toggle description"
+  },
+  "blockMalware": {
+    "message": "Block Malware",
+    "description": "Block malware toggle label"
+  },
+  "blockMalwareDesc": {
+    "message": "Block known malware, phishing, and malicious domains",
+    "description": "Block malware toggle description"
+  },
+  "blockAnnoyances": {
+    "message": "Block Annoyances",
+    "description": "Block annoyances toggle label"
+  },
+  "blockAnnoyancesDesc": {
+    "message": "Block anti-adblock warnings, popups, and overlays",
+    "description": "Block annoyances toggle description"
+  },
+  "blockSocial": {
+    "message": "Block Social Media",
+    "description": "Block social media toggle label"
+  },
+  "blockSocialDesc": {
+    "message": "Block social media buttons and widgets",
+    "description": "Block social media toggle description"
+  },
+  "blockCookieNotices": {
+    "message": "Block Cookie Notices",
+    "description": "Block cookie notices toggle label"
+  },
+  "blockCookieNoticesDesc": {
+    "message": "Block GDPR/cookie consent banners",
+    "description": "Block cookie notices toggle description"
+  },
+  "filterListsTitle": {
+    "message": "Filter Lists",
+    "description": "Filter lists tab title"
+  },
+  "addCustomList": {
+    "message": "Add Custom List",
+    "description": "Add custom filter list button"
+  },
+  "filterListsDesc": {
+    "message": "Filter lists contain rules that determine what gets blocked. Enable or disable lists based on your needs.",
+    "description": "Filter lists description"
+  },
+  "updateInterval": {
+    "message": "Auto-update Interval",
+    "description": "Update interval label"
+  },
+  "updateIntervalDesc": {
+    "message": "How often to check for filter list updates",
+    "description": "Update interval description"
+  },
+  "updateNow": {
+    "message": "Update Now",
+    "description": "Update now button"
+  },
+  "lastUpdated": {
+    "message": "Last Updated",
+    "description": "Last updated label"
+  },
+  "allowlistTitle": {
+    "message": "Allowlist",
+    "description": "Allowlist tab title"
+  },
+  "addSite": {
+    "message": "Add Site",
+    "description": "Add site button"
+  },
+  "allowlistDesc": {
+    "message": "Sites on the allowlist will not have any content blocked. You can add domains or specific URLs.",
+    "description": "Allowlist description"
+  },
+  "enterDomain": {
+    "message": "Enter domain (e.g., example.com) or full URL",
+    "description": "Allowlist input placeholder"
+  },
+  "add": {
+    "message": "Add",
+    "description": "Add button"
+  },
+  "customRulesTitle": {
+    "message": "Custom Rules",
+    "description": "Custom rules tab title"
+  },
+  "addRule": {
+    "message": "Add Rule",
+    "description": "Add custom rule button"
+  },
+  "customRulesDesc": {
+    "message": "Create custom blocking or allow rules using Adblock Plus syntax.",
+    "description": "Custom rules description"
+  },
+  "learnMore": {
+    "message": "Learn more",
+    "description": "Link text"
+  },
+  "cosmeticFiltersTitle": {
+    "message": "Cosmetic Filters (Element Hiding)",
+    "description": "Cosmetic filters tab title"
+  },
+  "addFilter": {
+    "message": "Add Filter",
+    "description": "Add cosmetic filter button"
+  },
+  "cosmeticFiltersDesc": {
+    "message": "Cosmetic filters hide elements on the page using CSS selectors. These are applied after the page loads.",
+    "description": "Cosmetic filters description"
+  },
+  "advancedTitle": {
+    "message": "Advanced Settings",
+    "description": "Advanced tab title"
+  },
+  "strictBlocking": {
+    "message": "Strict Blocking Mode",
+    "description": "Strict blocking toggle label"
+  },
+  "strictBlockingDesc": {
+    "message": "Block requests more aggressively (may break some sites)",
+    "description": "Strict blocking toggle description"
+  },
+  "blockWebRTC": {
+    "message": "Block WebRTC",
+    "description": "Block WebRTC toggle label"
+  },
+  "blockWebRTCDesc": {
+    "message": "Prevent WebRTC IP leaks (may break video calls)",
+    "description": "Block WebRTC toggle description"
+  },
+  "blockRemoteFonts": {
+    "message": "Block Remote Fonts",
+    "description": "Block remote fonts toggle label"
+  },
+  "blockRemoteFontsDesc": {
+    "message": "Block third-party font requests for privacy",
+    "description": "Block remote fonts toggle description"
+  },
+  "blockThirdPartyFrames": {
+    "message": "Block Third-Party Frames",
+    "description": "Block third-party frames toggle label"
+  },
+  "blockThirdPartyFramesDesc": {
+    "message": "Block iframes from third-party domains",
+    "description": "Block third-party frames toggle description"
+  },
+  "debugMode": {
+    "message": "Debug Mode",
+    "description": "Debug mode toggle label"
+  },
+  "debugModeDesc": {
+    "message": "Enable verbose logging in console",
+    "description": "Debug mode toggle description"
+  },
+  "dataManagement": {
+    "message": "Data Management",
+    "description": "Data management group title"
+  },
+  "exportSettings": {
+    "message": "Export Settings",
+    "description": "Export settings button"
+  },
+  "importSettings": {
+    "message": "Import Settings",
+    "description": "Import settings button"
+  },
+  "resetAllSettings": {
+    "message": "Reset All Settings",
+    "description": "Reset all settings button"
+  },
+  "statistics": {
+    "message": "Statistics",
+    "description": "Statistics section title"
+  },
+  "totalBlocked": {
+    "message": "Total Blocked",
+    "description": "Stat label - total blocked"
+  },
+  "resetStatistics": {
+    "message": "Reset Statistics",
+    "description": "Reset statistics button"
+  },
+  "aboutTitle": {
+    "message": "About",
+    "description": "About tab title"
+  },
+  "version": {
+    "message": "Version 1.0.0",
+    "description": "Version string"
+  },
+  "aboutDescription": {
+    "message": "AeroGuard — A powerful, privacy-focused ad blocker built on Manifest V3. Blocks ads, trackers, malware, and annoyances across the web. No data collection. Works offline.",
+    "description": "About description"
+  },
+  "githubRepository": {
+    "message": "GitHub Repository",
+    "description": "GitHub link"
+  },
+  "reportIssue": {
+    "message": "Report Issue",
+    "description": "Report issue link"
+  },
+  "documentation": {
+    "message": "Documentation",
+    "description": "Documentation link"
+  },
+  "credits": {
+    "message": "Credits",
+    "description": "Credits section title"
+  },
+  "creditsList": {
+    "message": "Filter lists by EasyList and contributors. Icons by Feather Icons. Built with Manifest V3 for Chrome, Firefox, Edge, and Safari.",
+    "description": "Credits text"
+  },
+  "license": {
+    "message": "Licensed under MIT License. Copyright © 2025 AeroGuard Contributors",
+    "description": "License text"
+  },
+  "save": {
+    "message": "Save",
+    "description": "Save button"
+  },
+  "cancel": {
+    "message": "Cancel",
+    "description": "Cancel button"
+  },
+  "edit": {
+    "message": "Edit",
+    "description": "Edit button"
+  },
+  "delete": {
+    "message": "Delete",
+    "description": "Delete button"
+  },
+  "remove": {
+    "message": "Remove",
+    "description": "Remove button"
+  },
+  "ruleTypeBlock": {
+    "message": "Block",
+    "description": "Rule type - block"
+  },
+  "ruleTypeAllow": {
+    "message": "Allow",
+    "description": "Rule type - allow"
+  },
+  "filterPattern": {
+    "message": "Filter Pattern",
+    "description": "Filter pattern label"
+  },
+  "filterPatternHint": {
+    "message": "Examples: ||example.com^, @@||example.com^$script, ||example.com^$domain=~allowed.com",
+    "description": "Filter pattern hint"
+  },
+  "domains": {
+    "message": "Domains (optional)",
+    "description": "Domains label"
+  },
+  "domainsHint": {
+    "message": "Comma-separated. Prefix with ~ to exclude.",
+    "description": "Domains hint"
+  },
+  "cssSelector": {
+    "message": "CSS Selector",
+    "description": "CSS selector label"
+  },
+  "cssSelectorHint": {
+    "message": "Standard CSS selector. Multiple selectors separated by commas.",
+    "description": "CSS selector hint"
+  },
+  "exceptionFilter": {
+    "message": "Exception Filter (Whitelist)",
+    "description": "Exception filter checkbox label"
+  },
+  "customRuleModalTitleAdd": {
+    "message": "Add Custom Rule",
+    "description": "Custom rule modal title - add"
+  },
+  "customRuleModalTitleEdit": {
+    "message": "Edit Custom Rule",
+    "description": "Custom rule modal title - edit"
+  },
+  "cosmeticFilterModalTitleAdd": {
+    "message": "Add Cosmetic Filter",
+    "description": "Cosmetic filter modal title - add"
+  },
+  "cosmeticFilterModalTitleEdit": {
+    "message": "Edit Cosmetic Filter",
+    "description": "Cosmetic filter modal title - edit"
   }
 }

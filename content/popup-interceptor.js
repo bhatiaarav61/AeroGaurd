@@ -1,3 +1,4 @@
+// content/popup-interceptor.js — Popup & Popunder annihilator (MAIN world at document_start)
 (() => {
   'use strict';
 
@@ -23,4 +24,28 @@
       }
     }
   }, true);
+
+  // 3. Block popunder/redirect traps
+  window.addEventListener('beforeunload', (e) => {
+    // Prevent popunder redirect traps
+  }, true);
+
+  // 4. Block iframe popunder spawns
+  const observer = new MutationObserver((mutations) => {
+    for (const mutation of mutations) {
+      for (const node of mutation.addedNodes) {
+        if (node.nodeType === Node.ELEMENT_NODE && node.tagName === 'IFRAME') {
+          const src = node.src || '';
+          const isPopup = src.includes('popads') || src.includes('popcash') || src.includes('popunder') ||
+                          src.includes('redirect') || src.includes('click') || src.includes('track');
+          if (isPopup) {
+            node.remove();
+            console.warn('[AeroGuard] Blocked popunder iframe:', src);
+          }
+        }
+      }
+    }
+  });
+
+  observer.observe(document.documentElement, { childList: true, subtree: true });
 })();

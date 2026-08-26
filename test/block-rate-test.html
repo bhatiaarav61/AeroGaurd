@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AeroGuard Block Rate Test</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg-primary: #0f172a;
+      --bg-secondary: #1e293b;
+      --bg-tertiary: #334155;
+      --accent: #38bdf8;
+      --accent-hover: #0ea5e9;
+      --accent-dim: rgba(56, 189, 248, 0.15);
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --success: #4ade80;
+      --warning: #facc15;
+      --error: #f87171;
+      --border: #334155;
+      --border-hover: #475569;
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 16px;
+      --transition: all 0.2s ease;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      padding: 20px;
+      min-height: 100vh;
+    }
+    .container { max-width: 1200px; margin: 0 auto; }
+    h1 { color: var(--accent); margin-bottom: 8px; }
+    .subtitle { color: var(--text-secondary); margin-bottom: 24px; }
+    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
+    .stat-card { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 16px; text-align: center; }
+    .stat-value { font-size: 32px; font-weight: 800; color: var(--accent); }
+    .stat-label { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px; }
+    .stat-card.success .stat-value { color: var(--success); }
+    .stat-card.warning .stat-value { color: var(--warning); }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--border); }
+    th { background: var(--bg-secondary); color: var(--text-secondary); font-weight: 600; position: sticky; top: 0; }
+    tr:hover td { background: var(--bg-secondary); }
+    .status { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 100px; font-size: 11px; font-weight: 600; }
+    .status.blocked { background: rgba(74, 222, 128, 0.15); color: var(--success); border: 1px solid rgba(74, 222, 128, 0.3); }
+    .status.allowed { background: rgba(248, 113, 113, 0.15); color: var(--error); border: 1px solid rgba(248, 113, 113, 0.3); }
+    .status.error { background: rgba(250, 204, 21, 0.15); color: var(--warning); border: 1px solid rgba(250, 204, 21, 0.3); }
+    .category { color: var(--text-muted); font-size: 11px; text-transform: uppercase; }
+    .url-cell { font-family: monospace; font-size: 12px; max-width: 400px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .progress-bar { height: 8px; background: var(--bg-tertiary); border-radius: 4px; overflow: hidden; margin-top: 16px; }
+    .progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent), #0ea5e9); transition: width 0.3s; }
+    .target { color: var(--text-secondary); font-size: 14px; margin-top: 8px; }
+    .target strong { color: var(--accent); }
+    .summary { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 20px; margin-bottom: 24px; display: none; }
+    .summary h2 { color: var(--accent); margin-bottom: 12px; }
+    .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; }
+    .summary-item { text-align: center; }
+    .summary-value { font-size: 28px; font-weight: 800; color: var(--text-primary); }
+    .summary-label { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🧪 AeroGuard Block Rate Test Suite</h1>
+    <p class="subtitle">Testing 132 request patterns across ad networks, tracking, YouTube ads, and legitimate content</p>
+
+    <div class="summary" id="summary">
+      <h2>Results Summary</h2>
+      <div class="summary-grid">
+        <div class="summary-item">
+          <div class="summary-value" id="totalTests">0</div>
+          <div class="summary-label">Total Tests</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-value" id="blockedCount">0</div>
+          <div class="summary-label">Blocked</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-value" id="allowedCount">0</div>
+          <div class="summary-label">Allowed</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-value" id="blockRate">0%</div>
+          <div class="summary-label">Block Rate</div>
+        </div>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width: 0%"></div></div>
+      <p class="target">Target: <strong>≥90%</strong> block rate</p>
+    </div>
+
+    <div class="stats">
+      <div class="stat-card" id="adsCard">
+        <div class="stat-value" id="adsBlocked">0</div>
+        <div class="stat-label">Ads Blocked</div>
+      </div>
+      <div class="stat-card" id="trackingCard">
+        <div class="stat-value" id="trackingBlocked">0</div>
+        <div class="stat-label">Tracking Blocked</div>
+      </div>
+      <div class="stat-card" id="youtubeCard">
+        <div class="stat-value" id="youtubeBlocked">0</div>
+        <div class="stat-label">YouTube Ads Blocked</div>
+      </div>
+      <div class="stat-card" id="legitCard">
+        <div class="stat-value" id="legitAllowed">0</div>
+        <div class="stat-label">Legitimate Allowed</div>
+      </div>
+    </div>
+
+    <table id="resultsTable">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Category</th>
+          <th>URL</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="resultsBody"></tbody>
+    </table>
+  </div>
+
+  <script>
+    // ============================================
+    // TEST URLS - 132 Total
+    // ============================================
+    const TEST_URLS = [
+      // ===== EASYLIST AD NETWORKS (30) =====
+      { url: 'http://ads.example.com/banner.jpg', category: 'Ads', expected: 'blocked' },
+      { url: 'http://ads.example.com/tracker.js', category: 'Ads', expected: 'blocked' },
+      { url: 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js', category: 'Ads', expected: 'blocked' },
+      { url: 'https://googleads.g.doubleclick.net/pagead/ads', category: 'Ads', expected: 'blocked' },
+      { url: 'https://static.doubleclick.net/instream/ad_status.js', category: 'Ads', expected: 'blocked' },
+      { url: 'https://pubads.g.doubleclick.net/gampad/ads', category: 'Ads', expected: 'blocked' },
+      { url: 'https://securepubads.g.doubleclick.net/tag/js/gpt.js', category: 'Ads', expected: 'blocked' },
+      { url: 'https://adservice.google.com/adsid/integrator.js', category: 'Ads', expected: 'blocked' },
+      { url: 'https://www.googletagservices.com/tag/js/gpt.js', category: 'Ads', expected: 'blocked' },
+      { url: 'https://tpc.googlesyndication.com/safeframe', category: 'Ads', expected: 'blocked' },
+      { url: 'https://cdn.adnxs.com/ib/pbcs.js', category: 'Ads', expected: 'blocked' },
+      { url: 'https://cdn.rubiconproject.com/prebid.js', category: 'Ads', expected: 'blocked' },
+      { url: 'https://cdn.openx.com/prebid.js', category: 'Ads', expected: 'blocked' },
+      { url: 'https://cdn.pubmatic.com/prebid.js', category: 'Ads', expected: 'blocked' },
+      { url: 'https://cdn.smaato.net/prebid.js', category: 'Ads', expected: 'blocked' },
+      { url: 'https://cdn.moatads.com/moatad.js', category: 'Ads', expected: 'blocked' },
+      { url: 'https://cdn.indexexchange.com/prebid.js', category: 'Ads', expected: 'blocked' },
+      { url: 'https://cdn.appnexus.com/prebid.js', category: 'Ads', expected: 'blocked' },
+      { url: 'https://cdn.criteo.com/prebid.js', category: 'Ads', expected: 'blocked' },
+      { url: 'https://cdn.taboola.com/prebid.js', category: 'Ads', expected: 'blocked' },
+      { url: 'https://cdn.outbrain.com/prebid.js', category: 'Ads', expected: 'blocked' },
+      { url: 'https://cdn.teads.tv/prebid.js', category: 'Ads', expected: 'blocked' },
+      { url: 'https://cdn.sharethrough.com/prebid.js', category: 'Ads', expected: 'blocked' },
+      { url: 'https://cdn.spotxchange.com/prebid.js', category: 'Ads', expected: 'blocked' },
+      { url: 'https://cdn.videoamp.com/prebid.js', category: 'Ads', expected: 'blocked' },
+      { url: 'https://cdn.quantcast.com/prebid.js', category: 'Ads', expected: 'blocked' },
+      { url: 'https://cdn.yieldmo.com/prebid.js', category: 'Ads', expected: 'blocked' },
+      { url: 'https://cdn.yieldlab.net/prebid.js', category: 'Ads', expected: 'blocked' },
+      { url: 'https://cdn.sovrn.com/prebid.js', category: 'Ads', expected: 'blocked' },
+      { url: 'https://cdn.rhythmone.com/prebid.js', category: 'Ads', expected: 'blocked' },
+      { url: 'https://cdn.mediamath.com/prebid.js', category: 'Ads', expected: 'blocked' },
+
+      // ===== YOUTUBE AD URLs (25) =====
+      { url: 'https://www.youtube.com/api/stats/ads?video_id=test', category: 'YouTube', expected: 'blocked' },
+      { url: 'https://www.youtube.com/ptracking?video_id=test', category: 'YouTube', expected: 'blocked' },
+      { url: 'https://www.youtube.com/pagead/conversion', category: 'YouTube', expected: 'blocked' },
+      { url: 'https://googleads.g.doubleclick.net/pagead/viewthroughconversion/123', category: 'YouTube', expected: 'blocked' },
+      { url: 'https://pubads.g.doubleclick.net/gampad/ads', category: 'YouTube', expected: 'blocked' },
+      { url: 'https://www.youtube.com/api/stats/qoe', category: 'YouTube', expected: 'blocked' },
+      { url: 'https://www.youtube.com/api/stats/watchtime', category: 'YouTube', expected: 'blocked' },
+      { url: 'https://www.youtube.com/api/stats/playback', category: 'YouTube', expected: 'blocked' },
+      { url: 'https://www.youtube.com/pagead/', category: 'YouTube', expected: 'blocked' },
+      { url: 'https://www.youtube.com/annotations_invideo', category: 'YouTube', expected: 'blocked' },
+      { url: 'https://www.youtube.com/get_video_info?adformat=1', category: 'YouTube', expected: 'blocked' },
+      { url: 'https://www.youtube.com/get_video_info?ad_type=video', category: 'YouTube', expected: 'blocked' },
+      { url: 'https://www.youtube.com/get_video_info?ad3_module=1', category: 'YouTube', expected: 'blocked' },
+      { url: 'https://www.youtube.com/get_video_info?afv_ad_tag=1', category: 'YouTube', expected: 'blocked' },
+      { url: 'https://www.youtube.com/get_video_info?vmap=', category: 'YouTube', expected: 'blocked' },
+      { url: 'https://www.youtube.com/get_video_info?ad_tag=', category: 'YouTube', expected: 'blocked' },
+      { url: 'https://www.youtube.com/get_video_info?ad_url=', category: 'YouTube', expected: 'blocked' },
+      { url: 'https://www.youtube.com/youtubei/v1/player', category: 'YouTube', expected: 'blocked' },
+      { url: 'https://www.youtube.com/youtubei/v1/next', category: 'YouTube', expected: 'blocked' },
+      { url: 'https://www.youtube.com/youtubei/v1/browse', category: 'YouTube', expected: 'blocked' },
+      { url: 'https://www.youtube.com/youtubei/v1/ad/get', category: 'YouTube', expected: 'blocked' },
+      { url: 'https://www.youtube.com/youtubei/v1/ad/click', category: 'YouTube', expected: 'blocked' },
+      { url: 'https://imasdk.googleapis.com/js/sdkloader/ima3.js', category: 'YouTube', expected: 'blocked' },
+      { url: 'https://imasdk.s3.amazonaws.com/imasdk.js', category: 'YouTube', expected: 'blocked' },
+      { url: 'https://www.gstatic.com/imasdk/ima3.js', category: 'YouTube', expected: 'blocked' },
+      { url: 'https://cdn.jsdelivr.net/npm/google-ima', category: 'YouTube', expected: 'blocked' },
+
+      // ===== TRACKING & ANALYTICS (25) =====
+      { url: 'https://www.google-analytics.com/collect', category: 'Tracking', expected: 'blocked' },
+      { url: 'https://www.google-analytics.com/j/collect', category: 'Tracking', expected: 'blocked' },
+      { url: 'https://www.google-analytics.com/mp/collect', category: 'Tracking', expected: 'blocked' },
+      { url: 'https://www.googletagmanager.com/gtm.js', category: 'Tracking', expected: 'blocked' },
+      { url: 'https://www.googletagmanager.com/gtag.js', category: 'Tracking', expected: 'blocked' },
+      { url: 'https://connect.facebook.net/en_US/fbevents.js', category: 'Tracking', expected: 'blocked' },
+      { url: 'https://www.facebook.com/tr/', category: 'Tracking', expected: 'blocked' },
+      { url: 'https://px.ads.linkedin.com/collect', category: 'Tracking', expected: 'blocked' },
+      { url: 'https://snap.licdn.com/li.lms-analytics/insight.min.js', category: 'Tracking', expected: 'blocked' },
+      { url: 'https://analytics.twitter.com/i/adsct', category: 'Tracking', expected: 'blocked' },
+      { url: 'https://analytics.tiktok.com/i18n/pixel/events.js', category: 'Tracking', expected: 'blocked' },
+      { url: 'https://business.tiktok.com/events', category: 'Tracking', expected: 'blocked' },
+      { url: 'https://tr.pinterest.com/tracker.js', category: 'Tracking', expected: 'blocked' },
+      { url: 'https://s.pinimg.com/ct/', category: 'Tracking', expected: 'blocked' },
+      { url: 'https://snap.licdn.com/li.lms-analytics/', category: 'Tracking', expected: 'blocked' },
+      { url: 'https://api.mixpanel.com/track', category: 'Tracking', expected: 'blocked' },
+      { url: 'https://api.amplitude.com/httpapi', category: 'Tracking', expected: 'blocked' },
+      { url: 'https://cdn.segment.io/analytics.js', category: 'Tracking', expected: 'blocked' },
+      { url: 'https://cdn.heapanalytics.com/heap.js', category: 'Tracking', expected: 'blocked' },
+      { url: 'https://static.hotjar.com/c/hotjar-', category: 'Tracking', expected: 'blocked' },
+      { url: 'https://script.hotjar.com/modules.+', category: 'Tracking', expected: 'blocked' },
+      { url: 'https://www.googletagmanager.com/gtag/js', category: 'Tracking', expected: 'blocked' },
+      { url: 'https://www.clarity.ms/tag/', category: 'Tracking', expected: 'blocked' },
+      { url: 'https://www.fullstory.com/rec/fs.js', category: 'Tracking', expected: 'blocked' },
+      { url: 'https://js.agent.fullstory.com/fs.js', category: 'Tracking', expected: 'blocked' },
+      { url: 'https://www.googletagmanager.com/gtag/js', category: 'Tracking', expected: 'blocked' },
+
+      // ===== MALWARE/THREAT (12) =====
+      { url: 'http://malware.example.com/payload.exe', category: 'Malware', expected: 'blocked' },
+      { url: 'http://phishing.example.com/login', category: 'Malware', expected: 'blocked' },
+      { url: 'https://badware.example.com/driveby', category: 'Malware', expected: 'blocked' },
+      { url: 'https://malvertising.example.com/exploit', category: 'Malware', expected: 'blocked' },
+      { url: 'https://ransomware.example.com/encrypt', category: 'Malware', expected: 'blocked' },
+      { url: 'https://trojan.example.com/download', category: 'Malware', expected: 'blocked' },
+      { url: 'https://spyware.example.com/keylog', category: 'Malware', expected: 'blocked' },
+      { url: 'https://adware.example.com/popup', category: 'Malware', expected: 'blocked' },
+      { url: 'https://scareware.example.com/fakeav', category: 'Malware', expected: 'blocked' },
+      { url: 'https://rootkit.example.com/hide', category: 'Malware', expected: 'blocked' },
+      { url: 'https://botnet.example.com/c2', category: 'Malware', expected: 'blocked' },
+      { url: 'https://exploitkit.example.com/kit', category: 'Malware', expected: 'blocked' },
+
+      // ===== SOCIAL MEDIA WIDGETS (10) =====
+      { url: 'https://platform.twitter.com/widgets.js', category: 'Social', expected: 'blocked' },
+      { url: 'https://connect.facebook.net/en_US/sdk.js', category: 'Social', expected: 'blocked' },
+      { url: 'https://platform.linkedin.com/in.js', category: 'Social', expected: 'blocked' },
+      { url: 'https://apis.google.com/js/platform.js', category: 'Social', expected: 'blocked' },
+      { url: 'https://platform.instagram.com/en_US/embeds.js', category: 'Social', expected: 'blocked' },
+      { url: 'https://assets.pinterest.com/js/pinit.js', category: 'Social', expected: 'blocked' },
+      { url: 'https://widgets.pinterest.com/v1/widget.js', category: 'Social', expected: 'blocked' },
+      { url: 'https://platform.tumblr.com/v1/share.js', category: 'Social', expected: 'blocked' },
+      { url: 'https://platform.reddit.com/v1/widgets.js', category: 'Social', expected: 'blocked' },
+      { url: 'https://cdn.syndication.twimg.com/widgets/followbutton', category: 'Social', expected: 'blocked' },
+
+      // ===== COOKIE/GDPR NOTICES (10) =====
+      { url: 'https://cdn.cookielaw.org/scripttemplates/otSDKStub.js', category: 'Cookie', expected: 'blocked' },
+      { url: 'https://cdn.cookielaw.org/consent/', category: 'Cookie', expected: 'blocked' },
+      { url: 'https://geolocation.onetrust.com/cookieconsent', category: 'Cookie', expected: 'blocked' },
+      { url: 'https://consent.trustarc.com/', category: 'Cookie', expected: 'blocked' },
+      { url: 'https://consent.cookiebot.com/', category: 'Cookie', expected: 'blocked' },
+      { url: 'https://consent.usercentrics.eu/', category: 'Cookie', expected: 'blocked' },
+      { url: 'https://cdn.privacy-mgmt.com/consent.js', category: 'Cookie', expected: 'blocked' },
+      { url: 'https://cdn.privacycenter.io/consent.js', category: 'Cookie', expected: 'blocked' },
+      { url: 'https://privacy.quantcast.com/consent.js', category: 'Cookie', expected: 'blocked' },
+      { url: 'https://consent.cmp.io/consent.js', category: 'Cookie', expected: 'blocked' },
+
+      // ===== LEGITIMATE CONTENT - Should NOT be blocked (20) =====
+      { url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', category: 'Legitimate', expected: 'allowed' },
+      { url: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg', category: 'Legitimate', expected: 'allowed' },
+      { url: 'https://www.youtube.com/api/timedtext?v=dQw4w9WgXcQ&lang=en', category: 'Legitimate', expected: 'allowed' },
+      { url: 'https://googlevideo.com/videoplayback?video_id=test', category: 'Legitimate', expected: 'allowed' },
+      { url: 'https://s.ytimg.com/yts/jsbin/player-abc123.js', category: 'Legitimate', expected: 'allowed' },
+      { url: 'https://www.youtube.com/s/player/abc123/www-embed-player.vflset/www-embed-player.js', category: 'Legitimate', expected: 'allowed' },
+      { url: 'https://www.youtube.com/youtubei/v1/player?video_id=test', category: 'Legitimate', expected: 'allowed' },
+      { url: 'https://www.youtube.com/youtubei/v1/next?video_id=test', category: 'Legitimate', expected: 'allowed' },
+      { url: 'https://www.youtube.com/youtubei/v1/browse?video_id=test', category: 'Legitimate', expected: 'allowed' },
+      { url: 'https://www.youtube.com/iframe_api', category: 'Legitimate', expected: 'allowed' },
+      { url: 'https://fonts.googleapis.com/css?family=Roboto', category: 'Legitimate', expected: 'allowed' },
+      { url: 'https://fonts.gstatic.com/s/roboto.woff2', category: 'Legitimate', expected: 'allowed' },
+      { url: 'https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js', category: 'Legitimate', expected: 'allowed' },
+      { url: 'https://cdnjs.cloudflare.com/ajax/libs/lodash/4.17.21/lodash.min.js', category: 'Legitimate', expected: 'allowed' },
+      { url: 'https://code.jquery.com/jquery-3.6.0.min.js', category: 'Legitimate', expected: 'allowed' },
+      { url: 'https://unpkg.com/react@18/umd/react.production.min.js', category: 'Legitimate', expected: 'allowed' },
+      { url: 'https://cdn.jsdelivr.net/npm/vue@3', category: 'Legitimate', expected: 'allowed' },
+      { url: 'https://cdn.tailwindcss.com', category: 'Legitimate', expected: 'allowed' },
+      { url: 'https://cdn.jsdelivr.net/npm/chart.js', category: 'Legitimate', expected: 'allowed' },
+      { url: 'https://api.github.com/users/octocat', category: 'Legitimate', expected: 'allowed' },
+    ];
+
+    // ============================================
+    // TEST RUNNER
+    // ============================================
+    const results = [];
+    let completed = 0;
+    let blocked = 0;
+    let allowed = 0;
+    let errors = 0;
+
+    const summaryEl = document.getElementById('summary');
+    const progressFill = document.getElementById('progressFill');
+    const totalTestsEl = document.getElementById('totalTests');
+    const blockedCountEl = document.getElementById('blockedCount');
+    const allowedCountEl = document.getElementById('allowedCount');
+    const blockRateEl = document.getElementById('blockRate');
+    const resultsBody = document.getElementById('resultsBody');
+    const adsBlockedEl = document.getElementById('adsBlocked');
+    const trackingBlockedEl = document.getElementById('trackingBlocked');
+    const youtubeBlockedEl = document.getElementById('youtubeBlocked');
+    const legitAllowedEl = document.getElementById('legitAllowed');
+
+    function updateUI() {
+      totalTestsEl.textContent = completed;
+      blockedCountEl.textContent = blocked;
+      allowedCountEl.textContent = allowed;
+      const rate = completed > 0 ? Math.round((blocked / completed) * 100) : 0;
+      blockRateEl.textContent = rate + '%';
+      progressFill.style.width = rate + '%';
+      progressFill.style.background = rate >= 90 ? 'linear-gradient(90deg, #4ade80, #22c55e)' : 'linear-gradient(90deg, #38bdf8, #0ea5e9)';
+
+      // Category counts
+      let adsBlocked = 0, trackingBlocked = 0, youtubeBlocked = 0, legitAllowed = 0;
+      results.forEach(r => {
+        if (r.category === 'Ads' && r.status === 'blocked') adsBlocked++;
+        if (r.category === 'Tracking' && r.status === 'blocked') trackingBlocked++;
+        if (r.category === 'YouTube' && r.status === 'blocked') youtubeBlocked++;
+        if (r.category === 'Legitimate' && r.status === 'allowed') legitAllowed++;
+      });
+      adsBlockedEl.textContent = adsBlocked;
+      trackingBlockedEl.textContent = trackingBlocked;
+      youtubeBlockedEl.textContent = youtubeBlocked;
+      legitAllowedEl.textContent = legitAllowed;
+
+      summaryEl.style.display = 'block';
+    }
+
+    function addResult(index, url, category, status, expected) {
+      const row = document.createElement('tr');
+      const isMatch = status === expected;
+      row.innerHTML = `
+        <td>${index + 1}</td>
+        <td><span class="category">${category}</span></td>
+        <td class="url-cell" title="${url}">${url}</td>
+        <td><span class="status ${status}">${status.toUpperCase()}${isMatch ? '' : ' ⚠'}</span></td>
+      `;
+      if (!isMatch) {
+        row.style.background = 'rgba(250, 204, 21, 0.1)';
+      }
+      resultsBody.appendChild(row);
+    }
+
+    async function runTest(url, category, expected) {
+      return new Promise((resolve) => {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 5000);
+
+        fetch(url, { method: 'HEAD', mode: 'no-cors', signal: controller.signal })
+          .then(() => {
+            clearTimeout(timeout);
+            // Request didn't throw, so it was allowed (or redirected)
+            resolve({ status: 'allowed', error: null });
+          })
+          .catch((error) => {
+            clearTimeout(timeout);
+            if (error.name === 'AbortError') {
+              resolve({ status: 'error', error: 'timeout' });
+            } else if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+              // Likely blocked by DNR
+              resolve({ status: 'blocked', error: null });
+            } else {
+              resolve({ status: 'error', error: error.message });
+            }
+          });
+      });
+    }
+
+    async function runAllTests() {
+      for (let i = 0; i < TEST_URLS.length; i++) {
+        const test = TEST_URLS[i];
+        const result = await runTest(test.url, test.category, test.expected);
+
+        if (result.status === 'blocked') blocked++;
+        else if (result.status === 'allowed') allowed++;
+        else errors++;
+
+        completed++;
+        results.push({ ...test, ...result });
+        addResult(i, test.url, test.category, result.status, test.expected);
+        updateUI();
+
+        // Small delay to not overwhelm
+        await new Promise(r => setTimeout(r, 50));
+      }
+
+      // Final results
+      window.testResults = {
+        totalTests: completed,
+        blocked,
+        allowed,
+        errors,
+        blockRate: completed > 0 ? Math.round((blocked / completed) * 100) : 0,
+        details: results
+      };
+
+      console.log('Test Results:', window.testResults);
+    }
+
+    // Run tests on load
+    runAllTests();
+  </script>
+</body>
+</html>

@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AeroGuard - YouTube Ad Detection Test</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: #0f0f0f;
+            color: #e0e0e0;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #ff0000;
+            margin-bottom: 10px;
+            font-size: 2.5rem;
+        }
+        .subtitle {
+            color: #aaa;
+            margin-bottom: 30px;
+            font-size: 1.1rem;
+        }
+        .layout {
+            display: grid;
+            grid-template-columns: 1fr 480px;
+            gap: 20px;
+        }
+        @media (max-width: 1100px) {
+            .layout {
+                grid-template-columns: 1fr;
+            }
+        }
+        .panel {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 12px;
+            padding: 20px;
+        }
+        .panel h2 {
+            color: #fff;
+            margin-bottom: 16px;
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .panel h2::before {
+            content: '';
+            width: 4px;
+            height: 20px;
+            background: #ff0000;
+            border-radius: 2px;
+        }
+        /* YouTube Player Container */
+        .player-wrapper {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            background: #000;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .player-wrapper iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        .player-controls {
+            margin-top: 16px;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-primary {
+            background: #ff0000;
+            color: #fff;
+        }
+        .btn-primary:hover { background: #cc0000; }
+        .btn-secondary {
+            background: #333;
+            color: #e0e0e0;
+            border: 1px solid #444;
+        }
+        .btn-secondary:hover { background: #444; }
+        .btn-success {
+            background: #0f0;
+            color: #000;
+        }
+        .btn-success:hover { background: #0c0; }
+        .btn-danger {
+            background: #f00;
+            color: #fff;
+        }
+        .btn-danger:hover { background: #c00; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        /* Test Results */
+        .test-grid {
+            display: grid;
+            gap: 12px;
+        }
+        .test-item {
+            background: #222;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 16px;
+            transition: all 0.2s;
+        }
+        .test-item:hover { border-color: #444; }
+        .test-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+        .test-name {
+            font-weight: 600;
+            font-size: 15px;
+            flex: 1;
+        }
+        .test-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .status-pending { background: #333; color: #aaa; }
+        .status-running { background: #3a3; color: #0f0; animation: pulse 1s infinite; }
+        .status-pass { background: #0f0; color: #000; }
+        .status-fail { background: #f00; color: #fff; }
+        .status-error { background: #f80; color: #000; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        .test-details {
+            font-size: 13px;
+            color: #aaa;
+            line-height: 1.6;
+        }
+        .test-details .detected { color: #f80; }
+        .test-details .not-detected { color: #0f0; }
+        .test-details .error { color: #f44; }
+        .test-meta {
+            display: flex;
+            gap: 16px;
+            margin-top: 8px;
+            font-size: 12px;
+            color: #888;
+        }
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            background: #333;
+            border-radius: 4px;
+            font-size: 11px;
+        }
+        /* Logs */
+        .log-container {
+            max-height: 300px;
+            overflow-y: auto;
+            background: #0a0a0a;
+            border-radius: 6px;
+            padding: 12px;
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+        .log-entry {
+            margin: 4px 0;
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+        .log-info { color: #8af; }
+        .log-warn { color: #fa0; }
+        .log-error { color: #f44; }
+        .log-success { color: #0f0; }
+        .log-debug { color: #888; }
+        .log-timestamp { color: #666; margin-right: 8px; }
+        /* Instructions */
+        .instructions {
+            background: #1a1a2e;
+            border: 1px solid #2a2a4a;
+        }
+        .instructions h2::before { background: #8af; }
+        .instructions ol { padding-left: 20px; line-height: 1.8; }
+        .instructions li { margin-bottom: 8px; color: #ccc; }
+        .instructions code {
+            background: #0a0a0a;
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: #8af;
+            font-family: monospace;
+        }
+        .instructions .note {
+            background: #2a1a0a;
+            border: 1px solid #4a3a0a;
+            border-radius: 6px;
+            padding: 12px;
+            margin-top: 16px;
+            color: #fa0;
+        }
+        /* Summary */
+        .summary {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        @media (max-width: 600px) {
+            .summary { grid-template-columns: repeat(2, 1fr); }
+        }
+        .summary-card {
+            background: #222;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+        }
+        .summary-card h3 { font-size: 2rem; margin-bottom: 4px; }
+        .summary-card.pass h3 { color: #0f0; }
+        .summary-card.fail h3 { color: #f00; }
+        .summary-card.pending h3 { color: #aaa; }
+        .summary-card.running h3 { color: #3a3; }
+        .summary-card label { font-size: 12px; color: #888; text-transform: uppercase; }
+        /* Ad type tags */
+        .ad-type-tag {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-right: 6px;
+            margin-bottom: 4px;
+        }
+        .tag-preroll { background: #f00; color: #fff; }
+        .tag-midroll { background: #f80; color: #000; }
+        .tag-overlay { background: #ff0; color: #000; }
+        .tag-banner { background: #0ff; color: #000; }
+        .tag-sponsored { background: #f0f; color: #fff; }
+        .tag-shorts { background: #0f0; color: #000; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>YouTube Ad Detection Test</h1>
+        <p class="subtitle">Comprehensive test suite for detecting various YouTube ad types via DOM observation</p>
+
+        <div class="summary">
+            <div class="summary-card pending" id="summary-total">
+                <h3>0</h3>
+                <label>Total Tests</label>
+            </div>
+            <div class="summary-card pass" id="summary-pass">
+                <h3>0</h3>
+                <label>Passed</label>
+            </div>
+            <div class="summary-card fail" id="summary-fail">
+                <h3>0</h3>
+                <label>Failed</label>
+            </div>
+            <div class="summary-card running" id="summary-running">
+                <h3>0</h3>
+                <label>Running</label>
+            </div>
+        </div>
+
+        <div class="layout">
+            <div>
+                <div class="panel">
+                    <h2>YouTube Player</h2>
+                    <div class="player-wrapper" id="player-wrapper">
+                        <iframe
+                            id="youtube-player"
+                            src="https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ?enablejsapi=1&origin=https://example.com&rel=0&modestbranding=1"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                            allowfullscreen
+                            title="YouTube Test Video">
+                        </iframe>
+                    </div>
+                    <div class="player-controls">
+                        <button class="btn btn-primary" id="btn-load-video">Load Test Video</button>
+                        <button class="btn btn-secondary" id="btn-reload-player">Reload Player</button>
+                        <button class="btn btn-success" id="btn-run-all-tests">Run All Tests</button>
+                        <button class="btn btn-danger" id="btn-stop-tests">Stop Tests</button>
+                        <button class="btn btn-secondary" id="btn-clear-logs">Clear Logs</button>
+                    </div>
+                </div>
+
+                <div class="panel" style="margin-top: 20px;">
+                    <h2>Detection Logs</h2>
+                    <div class="log-container" id="log-container"></div>
+                </div>
+            </div>
+
+            <div>
+                <div class="panel">
+                    <h2>Ad Detection Tests</h2>
+                    <div class="test-grid" id="test-grid"></div>
+                </div>
+
+                <div class="panel instructions" style="margin-top: 20px;">
+                    <h2>Manual Verification Instructions</h2>
+                    <ol>
+                        <li><strong>Load a video with known ads:</strong> Click "Load Test Video" or manually navigate to a YouTube video that has ads (pre-roll, mid-roll, etc.)</li>
+                        <li><strong>Run detection:</strong> Click "Run All Tests" to start automated detection</li>
+                        <li><strong>Watch for ad injection:</strong> The MutationObserver will log any ad elements as they appear</li>
+                        <li><strong>Verify each ad type:</strong> Check the test results panel for each ad category</li>
+                        <li><strong>Manual inspection:</strong> Open DevTools (F12) → Elements tab and search for these selectors:
+                            <ul style="margin-top: 8px; padding-left: 20px; color: #8af;">
+                                <li><code>.video-ads</code> - Main ad container</li>
+                                <li><code>.ytp-ad-module</code> - Player ad module</li>
+                                <li><code>.ytp-ad-player-overlay</code> - Overlay ads</li>
+                                <li><code>ytd-ad-slot-renderer</code> - Ad slot renderer</li>
+                                <li><code>.ytp-ad-text</code>, <code>.ytp-ad-skip-button</code>, <code>.ytp-ad-preview-container</code></li>
+                            </ul>
+                        </li>
+                    </ol>
+                    <div class="note">
+                        <strong>Note:</strong> This test page uses <code>youtube-nocookie.com</code> embed which may not serve ads.
+                        For accurate testing, replace the iframe <code>src</code> with a regular <code>youtube.com/embed/VIDEO_ID</code> URL
+                        or test on actual YouTube.com with the AeroGuard extension installed.
+                        Some ad types (mid-roll, sponsored) only appear on specific videos or for non-Premium users.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // YouTube Ad Detection Test Suite
+        // ============================================
+
+        // Configuration
+        const AD_SELECTORS = {
+            preRoll: [
+                '.video-ads',
+                '.ytp-ad-module',
+                '.ytp-ad-player-overlay',
+                'ytd-ad-slot-renderer',
+                '.ytp-ad-preview-container',
+                '.ytp-ad-text',
+                '.ytp-ad-skip-button',
+                '.ytp-ad-skip-button-text',
+                '.ytp-ad-skip-button-icon',
+                '[class*="ad-showing"]',
+                '.html5-video-player.ad-showing'
+            ],
+            midRoll: [
+                '.ytp-ad-module',
+                '.ytp-ad-player-overlay',
+                '.video-ads',
+                'ytd-ad-slot-renderer',
+                '.ytp-ad-break-marker'
+            ],
+            overlay: [
+                '.ytp-ad-overlay-container',
+                '.ytp-ad-overlay-slot',
+                '.ytp-ad-overlay-close-button',
+                '.video-ads.ytp-ad-overlay'
+            ],
+            banner: [
+                '#masthead-ad',
+                '#player-ads',
+                'ytd-display-ad-renderer',
+                '.ytd-promoted-sparkles-web-renderer',
+                'ytd-compact-promoted-video-renderer'
+            ],
+            sponsored: [
+                'ytd-video-renderer[is-sponsored]',
+                'ytd-rich-item-renderer[is-sponsored]',
+                '.ytd-sponsored-content-renderer',
+                '[data-sponsored="true"]'
+            ],
+            shorts: [
+                'ytd-reel-video-renderer[is-ad]',
+                '.ytp-ad-module.shorts-ad',
+                'ytd-ad-slot-renderer[slot="shorts"]'
+            ]
+        };
+
+        // State
+        let observer = null;
+        let isTesting = false;
+        let testResults = {};
+        let detectedAds = new Set();
+        let logEntries = [];
+
+        // DOM Elements
+        const playerWrapper = document.getElementById('player-wrapper');
+        const youtubePlayer = document.getElementById('youtube-player');
+        const testGrid = document.getElementById('test-grid');
+        const logContainer = document.getElementById('log-container');
+        const btnLoadVideo = document.getElementById('btn-load-video');
+        const btnReloadPlayer = document.getElementById('btn-reload-player');
+        const btnRunAllTests = document.getElementById('btn-run-all-tests');
+        const btnStopTests = document.getElementById('btn-stop-tests');
+        const btnClearLogs = document.getElementById('btn-clear-logs');
+
+        // Summary elements
+        const summaryTotal = document.getElementById('summary-total');
+        const summaryPass = document.getElementById('summary-pass');
+        const summaryFail = document.getElementById('summary-fail');
+        const summaryRunning = document.getElementById('summary-running');
+
+        // Test video IDs (some known to have ads)
+        const TEST_VIDEOS = [
+            { id: 'dQw4w9WgXcQ', title: 'Rick Astley - Never Gonna Give You Up (Official Video)' },
+            { id: 'jNQXAC9IVRw', title: 'Me at the zoo (First YouTube video)' },
+            { id: '9bZkp7q19f0', title: 'PSY - GANGNAM STYLE' },
+            { id: 'kJQP7kiw5Fk', title: 'Luis Fonsi - Despacito ft. Daddy Yankee' }
+        ];
+        let currentVideoIndex = 0;
+
+        // ============================================
+        // Logging
+        // ============================================
+        function log(level, message, data = null) {
+            const timestamp = new Date().toISOString().split('T')[1].slice(0, -1);
+            const entry = document.createElement('div');
+            entry.className = `log-entry log-${level}`;
+            entry.innerHTML = `<span class="log-timestamp">[${timestamp}]</span>${message}`;
+            logContainer.appendChild(entry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+            logEntries.push({ timestamp, level, message, data });
+        }
+
+        function logInfo(msg, data) { log('info', msg, data); }
+        function logWarn(msg, data) { log('warn', msg, data); }
+        function logError(msg, data) { log('error', msg, data); }
+        function logSuccess(msg, data) { log('success', msg, data); }
+        function logDebug(msg, data) { log('debug', msg, data); }
+
+        // ============================================
+        // Test Grid Rendering
+        // ============================================
+        function renderTestGrid() {
+            const allTests = [];
+            Object.entries(AD_SELECTORS).forEach(([category, selectors]) => {
+                selectors.forEach((selector, idx) => {
+                    allTests.push({
+                        id: `${category}-${idx}`,
+                        category,
+                        selector,
+                        label: formatSelectorLabel(selector),
+                        status: 'pending',
+                        details: '',
+                        detected: false,
+                        timestamp: null
+                    });
+                });
+            });
+
+            testResults = {};
+            allTests.forEach(test => {
+                testResults[test.id] = test;
+            });
+
+            testGrid.innerHTML = allTests.map(test => `
+                <div class="test-item" id="test-${test.id}">
+                    <div class="test-header">
+                        <span class="test-name">${test.label}</span>
+                        <span class="test-status status-pending" id="status-${test.id}">Pending</span>
+                    </div>
+                    <div class="test-details" id="details-${test.id}">Waiting for test...</div>
+                    <div class="test-meta">
+                        <span class="badge">${test.category}</span>
+                        <span class="badge">${test.selector}</span>
+                    </div>
+                </div>
+            `).join('');
+
+            updateSummary();
+        }
+
+        function formatSelectorLabel(selector) {
+            return selector
+                .replace(/^\./, '')
+                .replace(/^\[/, '')
+                .replace(/\]$/, '')
+                .replace(/class\*="/, '')
+                .replace(/"/g, '')
+                .replace(/-/g, ' ')
+                .replace(/\b\w/g, c => c.toUpperCase());
+        }
+
+        function updateTestStatus(testId, status, details, detected = false) {
+            const test = testResults[testId];
+            if (!test) return;
+
+            test.status = status;
+            test.details = details;
+            test.detected = detected;
+            test.timestamp = new Date().toISOString();
+
+            const statusEl = document.getElementById(`status-${testId}`);
+            const detailsEl = document.getElementById(`details-${testId}`);
+            const itemEl = document.getElementById(`test-${testId}`);
+
+            if (statusEl) {
+                statusEl.className = `test-status status-${status}`;
+                statusEl.textContent = status.charAt(0).toUpperCase() + status.slice(1);
+            }
+            if (detailsEl) {
+                detailsEl.innerHTML = details;
+            }
+            if (itemEl) {
+                itemEl.className = `test-item ${status === 'fail' || status === 'pass' ? '' : 'testing'}`;
+            }
+
+            updateSummary();
+        }
+
+        function updateSummary() {
+            const tests = Object.values(testResults);
+            const total = tests.length;
+            const pass = tests.filter(t => t.status === 'pass').length;
+            const fail = tests.filter(t => t.status === 'fail').length;
+            const running = tests.filter(t => t.status === 'running').length;
+
+            summaryTotal.querySelector('h3').textContent = total;
+            summaryPass.querySelector('h3').textContent = pass;
+            summaryFail.querySelector('h3').textContent = fail;
+            summaryRunning.querySelector('h3').textContent = running;
+        }
+
+        // ============================================
+        // MutationObserver for Ad Detection
+        // ============================================
+        function startAdObserver() {
+            if (observer) {
+                observer.disconnect();
+            }
+
+            const targetNode = document.body;
+            const config = {
+                childList: true,
+                subtree: true,
+                attributes: true,
+                attributeFilter: ['class', 'style', 'data-ad-status']
+            };
+
+            observer = new MutationObserver((mutations) => {
+                if (!isTesting) return;
+
+                mutations.forEach(mutation => {
+                    // Check added nodes
+                    mutation.addedNodes.forEach(node => {
+                        if (node.nodeType === Node.ELEMENT_NODE) {
+                            checkElementForAds(node);
+                            // Also check descendants
+                            if (node.querySelectorAll) {
+                                node.querySelectorAll('*').forEach(checkElementForAds);
+                            }
+                        }
+                    });
+
+                    // Check attribute changes
+                    if (mutation.type === 'attributes') {
+                        checkElementForAds(mutation.target);
+                    }
+                });
+            });
+
+            observer.observe(targetNode, config);
+            logInfo('MutationObserver started - watching for ad injection');
+        }
+
+        function stopAdObserver() {
+            if (observer) {
+                observer.disconnect();
+                observer = null;
+                logInfo('MutationObserver stopped');
+            }
+        }
+
+        function checkElementForAds(element) {
+            if (!element || !element.matches) return;
+
+            Object.entries(AD_SELECTORS).forEach(([category, selectors]) => {
+                selectors.forEach((selector, idx) => {
+                    const testId = `${category}-${idx}`;
+                    if (element.matches(selector)) {
+                        const key = `${category}:${selector}`;
+                        if (!detectedAds.has(key)) {
+                            detectedAds.add(key);
+                            logSuccess(`Ad detected: ${category} - ${selector}`, { element });
+                            updateTestStatus(testId, 'fail', `<span class="detected">⚠ DETECTED</span> - Ad element found matching: <code>${selector}</code>`, true);
+                        }
+                    }
+                });
+            });
+
+            // Also check for YouTube player ad states
+            if (element.classList && element.classList.contains('html5-video-player')) {
+                if (element.classList.contains('ad-showing')) {
+                    logWarn('Player entered ad-showing state');
+                }
+            }
+        }
+
+        // ============================================
+        // Active Scanning
+        // ============================================
+        async function runActiveScan() {
+            logInfo('Starting active DOM scan for ad elements...');
+
+            Object.entries(AD_SELECTORS).forEach(([category, selectors]) => {
+                selectors.forEach((selector, idx) => {
+                    const testId = `${category}-${idx}`;
+                    updateTestStatus(testId, 'running', 'Scanning...');
+
+                    try {
+                        const elements = document.querySelectorAll(selector);
+                        if (elements.length > 0) {
+                            const details = `<span class="detected">⚠ ${elements.length} element(s) found</span> - Selector: <code>${selector}</code>`;
+                            updateTestStatus(testId, 'fail', details, true);
+                            logWarn(`Active scan: Found ${elements.length} element(s) for ${category} - ${selector}`);
+                            elements.forEach(el => logDebug(`  → ${el.tagName}.${el.className}`, el));
+                        } else {
+                            updateTestStatus(testId, 'pass', `<span class="not-detected">✓ Not detected</span> - Selector: <code>${selector}</code>`, false);
+                        }
+                    } catch (e) {
+                        updateTestStatus(testId, 'error', `<span class="error">Error: ${e.message}</span>`, false);
+                        logError(`Scan error for ${selector}: ${e.message}`);
+                    }
+                });
+            });
+
+            logInfo('Active scan complete');
+        }
+
+        // ============================================
+        // YouTube Player API Integration
+        // ============================================
+        let ytPlayer = null;
+
+        function onYouTubeIframeAPIReady() {
+            logInfo('YouTube IFrame API ready');
+            initYTPlayer();
+        }
+
+        function initYTPlayer() {
+            try {
+                ytPlayer = new YT.Player('youtube-player', {
+                    events: {
+                        'onReady': onPlayerReady,
+                        'onStateChange': onPlayerStateChange,
+                        'onError': onPlayerError
+                    }
+                });
+            } catch (e) {
+                logError(`Failed to init YT Player: ${e.message}`);
+            }
+        }
+
+        function onPlayerReady(event) {
+            logSuccess('YouTube player ready');
+            // Try to get player info
+            try {
+                const duration = event.target.getDuration();
+                logInfo(`Video duration: ${duration}s`);
+            } catch (e) {
+                logDebug('Could not get duration');
+            }
+        }
+
+        function onPlayerStateChange(event) {
+            const states = {
+                '-1': 'UNSTARTED',
+                '0': 'ENDED',
+                '1': 'PLAYING',
+                '2': 'PAUSED',
+                '3': 'BUFFERING',
+                '5': 'CUED'
+            };
+            logInfo(`Player state: ${states[event.data] || event.data}`);
+
+            // Scan for ads on state changes (especially when playing)
+            if (event.data === YT.PlayerState.PLAYING && isTesting) {
+                setTimeout(runActiveScan, 1000);
+            }
+        }
+
+        function onPlayerError(event) {
+            logError(`Player error: ${event.data}`);
+        }
+
+        // ============================================
+        // Test Execution
+        // ============================================
+        async function runAllTests() {
+            if (isTesting) return;
+            isTesting = true;
+
+            btnRunAllTests.disabled = true;
+            btnStopTests.disabled = false;
+
+            logInfo('=== Starting Full Ad Detection Test Suite ===');
+            startAdObserver();
+
+            // Initial scan
+            await runActiveScan();
+
+            // Periodic scans
+            const scanInterval = setInterval(() => {
+                if (!isTesting) {
+                    clearInterval(scanInterval);
+                    return;
+                }
+                runActiveScan();
+            }, 5000);
+
+            // Store interval for cleanup
+            window._scanInterval = scanInterval;
+
+            // Also test with different videos
+            logInfo('Test suite running. Will scan every 5 seconds. Click "Stop Tests" to end.');
+        }
+
+        function stopTests() {
+            isTesting = false;
+            stopAdObserver();
+
+            if (window._scanInterval) {
+                clearInterval(window._scanInterval);
+            }
+
+            btnRunAllTests.disabled = false;
+            btnStopTests.disabled = true;
+
+            logInfo('=== Test Suite Stopped ===');
+            logInfo(`Total unique ad detections: ${detectedAds.size}`);
+        }
+
+        function loadTestVideo() {
+            const video = TEST_VIDEOS[currentVideoIndex];
+            const url = `https://www.youtube-nocookie.com/embed/${video.id}?enablejsapi=1&origin=https://example.com&rel=0&modestbranding=1&autoplay=1`;
+            youtubePlayer.src = url;
+            logInfo(`Loading test video: ${video.title} (${video.id})`);
+            currentVideoIndex = (currentVideoIndex + 1) % TEST_VIDEOS.length;
+        }
+
+        function reloadPlayer() {
+            const currentSrc = youtubePlayer.src;
+            youtubePlayer.src = '';
+            setTimeout(() => {
+                youtubePlayer.src = currentSrc;
+                logInfo('Player reloaded');
+            }, 100);
+        }
+
+        function clearLogs() {
+            logContainer.innerHTML = '';
+            logEntries = [];
+        }
+
+        // ============================================
+        // Event Listeners
+        // ============================================
+        btnLoadVideo.addEventListener('click', loadTestVideo);
+        btnReloadPlayer.addEventListener('click', reloadPlayer);
+        btnRunAllTests.addEventListener('click', runAllTests);
+        btnStopTests.addEventListener('click', stopTests);
+        btnClearLogs.addEventListener('click', clearLogs);
+
+        // Load YouTube IFrame API
+        const tag = document.createElement('script');
+        tag.src = 'https://www.youtube.com/iframe_api';
+        const firstScriptTag = document.getElementsByTagName('script')[0];
+        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+        // Initialize
+        renderTestGrid();
+        logInfo('YouTube Ad Detection Test Page Loaded');
+        logInfo('Click "Run All Tests" to start detection');
+        logWarn('Note: Embedded players (youtube-nocookie.com) may not serve ads. Test on youtube.com for real ads.');
+
+        // Expose globals for console debugging
+        window.adTest = {
+            runAllTests,
+            stopTests,
+            runActiveScan,
+            startAdObserver,
+            stopAdObserver,
+            loadTestVideo,
+            getResults: () => testResults,
+            getDetectedAds: () => Array.from(detectedAds),
+            getLogs: () => logEntries
+        };
+    </script>
+</body>
+</html>

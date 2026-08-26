@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AeroGuard Ultra</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="popup-container">
+    <!-- Header -->
+    <header class="popup-header">
+      <div class="logo">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="2" y="2" width="20" height="20" rx="4" ry="4"/>
+          <path d="M9 12l2 2 4-4"/>
+          <line x1="6" y1="18" x2="18" y2="18"/>
+        </svg>
+        <span class="title">AeroGuard</span>
+        <span class="version">5.0</span>
+      </div>
+      <div class="status-indicator" id="statusIndicator">
+        <span class="dot"></span>
+        <span class="label">Active</span>
+      </div>
+    </header>
+
+    <!-- Main Stats -->
+    <main class="popup-main">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <span class="stat-value" id="blockedCount">0</span>
+          <span class="stat-label">Blocked</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-value" id="blockRate">0%</span>
+          <span class="stat-label">Block Rate</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-value" id="youtubeBlocked">0</span>
+          <span class="stat-label">YT Ads</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-value" id="youtubeRate">0%</span>
+          <span class="stat-label">YT Rate</span>
+        </div>
+      </div>
+
+      <!-- Filter Lists Status -->
+      <section class="section">
+        <h3>Filter Lists</h3>
+        <div class="filter-lists" id="filterLists">
+          <div class="loading">Loading...</div>
+        </div>
+      </section>
+
+      <!-- Quick Actions -->
+      <section class="section">
+        <h3>Quick Actions</h3>
+        <div class="action-buttons">
+          <button class="btn btn-primary" id="updateBtn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M23 4v6h-6"/><path d="M1 20v-6h6"/>
+              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+            </svg>
+            Update Lists
+          </button>
+          <button class="btn btn-secondary" id="resetBtn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="1 4 1 10 7 10"/>
+              <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
+            </svg>
+            Reset Stats
+          </button>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="popup-footer">
+      <div class="toggle-container">
+        <label class="toggle">
+          <input type="checkbox" id="enabledToggle" checked>
+          <span class="slider"></span>
+        </label>
+        <span class="toggle-label">Protection Enabled</span>
+      </div>
+      <div class="footer-links">
+        <button class="link-btn" id="optionsBtn">Settings</button>
+        <button class="link-btn" id="helpBtn">Help</button>
+      </div>
+    </footer>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

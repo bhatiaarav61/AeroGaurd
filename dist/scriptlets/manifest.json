@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "compiledAt": "2026-08-23T07:49:46.973Z",
+  "scriptlets": [
+    "C:\\Users\\PC\\Documents\\AeroGaurd\\scriptlets\\generic-ads",
+    "C:\\Users\\PC\\Documents\\AeroGaurd\\scriptlets\\youtube-consent",
+    "C:\\Users\\PC\\Documents\\AeroGaurd\\scriptlets\\youtube-ima",
+    "C:\\Users\\PC\\Documents\\AeroGaurd\\scriptlets\\youtube-network",
+    "C:\\Users\\PC\\Documents\\AeroGaurd\\scriptlets\\youtube-player"
+  ],
+  "totalScriptlets": 5,
+  "compiledScriptlets": 0
+}

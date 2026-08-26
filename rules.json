@@ -11,7 +11,52 @@
         "google-analytics.com",
         "googletagmanager.com",
         "adservice.google.com",
-        "amazon-adsystem.com",
+        "googleads.g.doubleclick.net",
+        "static.doubleclick.net",
+        "pagead2.googlesyndication.com",
+        "tpc.googlesyndication.com",
+        "google.com/adsense",
+        "google.com/pagead",
+        "youtube.com/pagead",
+        "youtube.com/get_video_info",
+        "youtube.com/api/stats/ads",
+        "youtube.com/api/stats/watchtime",
+        "youtube.com/api/stats/qoe",
+        "youtube.com/api/stats/playback",
+        "s.youtube.com",
+        "yt3.ggpht.com",
+        "i.ytimg.com"
+      ]
+    }
+  },
+  {
+    "id": 2,
+    "priority": 1000,
+    "action": { "type": "block" },
+    "condition": {
+      "requestDomains": [
+        "facebook.net",
+        "connect.facebook.net",
+        "pixel.facebook.com",
+        "analytics.facebook.com",
+        "analytics.twitter.com",
+        "static.ads-twitter.com",
+        "tr.snapchat.com",
+        "analytics.tiktok.com",
+        "ct.pinterest.com",
+        "licdn.com",
+        "px.ads.linkedin.com",
+        "snap.licdn.com",
+        "ads.linkedin.com"
+      ]
+    }
+  },
+  {
+    "id": 3,
+    "priority": 1000,
+    "action": { "type": "block" },
+    "condition": {
+      "requestDomains": [
         "criteo.com",
         "criteo.net",
         "taboola.com",
@@ -29,6 +74,31 @@
         "exoclick.com",
         "adsterra.com",
         "bidvertiser.com",
+        "clickadu.com",
+        "juicyads.com",
+        "ad-maven.com",
+        "hilltopads.com",
+        "revenuehits.com",
+        "buysellads.com",
+        "carbonads.net",
+        "adform.net",
+        "serving-sys.com",
+        "flashtalking.com",
+        "revcontent.com",
+        "mgid.com",
+        "zedo.com",
+        "adform.net",
+        "serving-sys.com",
+        "flashtalking.com"
+      ]
+    }
+  },
+  {
+    "id": 4,
+    "priority": 1000,
+    "action": { "type": "block" },
+    "condition": {
+      "requestDomains": [
         "hotjar.com",
         "mouseflow.com",
         "fullstory.com",
@@ -54,16 +124,16 @@
         "revcontent.com",
         "mgid.com",
         "buysellads.com",
-        "carbonads.net",
-        "connect.facebook.net",
-        "pixel.facebook.com",
-        "analytics.facebook.com",
-        "static.ads-twitter.com",
-        "analytics.twitter.com",
-        "tr.snapchat.com",
-        "analytics.tiktok.com",
-        "ct.pinterest.com",
-        "licdn.com",
+        "carbonads.net"
+      ]
+    }
+  },
+  {
+    "id": 5,
+    "priority": 1000,
+    "action": { "type": "block" },
+    "condition": {
+      "requestDomains": [
         "unityads.unity3d.com",
         "realmemobile.com",
         "oppomobile.com",
@@ -74,9 +144,16 @@
         "adjust.com",
         "kochava.com",
         "singular.net",
-        "googleads.g.doubleclick.net",
-        "static.doubleclick.net",
-        "youtube.com",
+        "tenjin.com"
+      ]
+    }
+  },
+  {
+    "id": 6,
+    "priority": 1000,
+    "action": { "type": "block" },
+    "condition": {
+      "requestDomains": [
         "popads.net",
         "popcash.net",
         "propellerads.com",
@@ -87,8 +164,102 @@
         "juicyads.com",
         "ad-maven.com",
         "hilltopads.com",
-        "revenuehits.com"
+        "revenuehits.com",
+        "adcash.com",
+        "plugrush.com",
+        "ero-advertising.com",
+        "trafficjunky.com"
       ]
+    }
+  },
+  {
+    "id": 7,
+    "priority": 1000,
+    "action": { "type": "block" },
+    "condition": {
+      "requestDomains": [
+        "sentry.io",
+        "bugsnag.com",
+        "rollbar.com",
+        "logrocket.com",
+        "datadoghq.com",
+        "raygun.io",
+        "mixpanel.com",
+        "hotjar.com",
+        "clarity.ms",
+        "segment.io",
+        "google-analytics.com",
+        "googletagmanager.com",
+        "yandex.ru/metrika",
+        "chartbeat.com",
+        "amplitude.com",
+        "heap.io"
+      ]
+    }
+  },
+  {
+    "id": 8,
+    "priority": 1000,
+    "action": { "type": "block" },
+    "condition": {
+      "requestDomains": [
+        "doubleclick.net",
+        "googlesyndication.com",
+        "googleadservices.com",
+        "criteo.com",
+        "criteo.net",
+        "taboola.com",
+        "outbrain.com",
+        "amazon-adsystem.com",
+        "revcontent.com",
+        "pubmatic.com",
+        "rubiconproject.com",
+        "openx.net",
+        "casalemedia.com",
+        "smartadserver.com",
+        "popads.net",
+        "popcash.net",
+        "adnxs.com"
+      ]
+    }
+  },
+  {
+    "id": 9,
+    "priority": 200,
+    "action": {
+      "type": "redirect",
+      "redirect": {
+        "transform": {
+          "queryTransform": {
+            "removeParams": [
+              "utm_source",
+              "utm_medium",
+              "utm_campaign",
+              "utm_term",
+              "utm_content",
+              "fbclid",
+              "gclid",
+              "msclkid",
+              "mc_eid",
+              "yclid",
+              "_ga",
+              "adlt",
+              "gbraid",
+              "wbraid",
+              "ttclid",
+              "li_fat_id",
+              "twclid",
+              "igshid",
+              "mc_cid",
+              "mc_eid"
+            ]
+          }
+        }
+      }
+    },
+    "condition": {
+      "urlFilter": "*?*=*",
+      "resourceTypes": ["main_frame", "sub_frame"]
     }
   }
 ]

@@ -1,0 +1,10 @@
+const mod = require('./telemetry.cjs');
+console.log('Keys:', Object.keys(mod));
+console.log('Telemetry:', typeof mod.Telemetry);
+console.log('telemetry:', typeof mod.telemetry);
+console.log('Counter:', typeof mod.Counter);
+console.log('Gauge:', typeof mod.Gauge);
+console.log('Histogram:', typeof mod.Histogram);
+console.log('PrivacyEngine:', typeof mod.PrivacyEngine);
+console.log('LocalAggregator:', typeof mod.LocalAggregator);
+console.log('EventRecorder:', typeof mod.EventRecorder);

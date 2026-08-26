@@ -1,0 +1,8 @@
+{
+  "timestamp": "2026-08-22T06:21:27.643Z",
+  "blockRateTest": null,
+  "youtubeTest": null,
+  "passed": false,
+  "exitCode": 1,
+  "error": "Extension service worker not found - extension may not have loaded"
+}

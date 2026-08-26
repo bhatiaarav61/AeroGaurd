@@ -2,85 +2,63 @@
 <html>
 <head>
   <meta charset="utf-8">
+  <title>AeroGuard Pro</title>
   <style>
-    body {
-      width: 280px;
-      margin: 0;
-      padding: 16px;
-      font-family: system-ui, -apple-system, sans-serif;
-      background: #0f172a;
-      color: #f8fafc;
-    }
-    .header {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      border-bottom: 1px solid #334155;
-      padding-bottom: 12px;
-      margin-bottom: 16px;
-    }
-    .logo-icon {
-      width: 28px;
-      height: 28px;
-      fill: #38bdf8;
-    }
-    .title {
-      font-weight: 700;
-      font-size: 16px;
-      color: #38bdf8;
-    }
-    .badge {
-      margin-left: auto;
-      font-size: 11px;
-      background: #1e293b;
-      color: #4ade80;
-      padding: 2px 8px;
-      border-radius: 12px;
-      border: 1px solid #334155;
-    }
-    .stat-card {
-      background: #1e293b;
-      border-radius: 8px;
-      padding: 14px;
-      border: 1px solid #334155;
-    }
-    .stat-number {
-      font-size: 26px;
-      font-weight: 800;
-      color: #38bdf8;
-    }
-    .stat-label {
-      font-size: 11px;
-      color: #94a3b8;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { width: 360px; font: 13px/1.5 system-ui; background: #fafafa; color: #1a1a2e; }
+    header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 16px; border-radius: 0 0 12px 12px; }
+    h1 { font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+    .status { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: white; border-bottom: 1px solid #eee; }
+    .toggle { display: flex; align-items: center; gap: 10px; }
+    .switch { position: relative; width: 48px; height: 26px; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background: #ccc; border-radius: 26px; transition: .3s; }
+    .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 3px; bottom: 3px; background: white; border-radius: 50%; transition: .3s; box-shadow: 0 2px 4px rgba(0,0,0,.2); }
+    input:checked + .slider { background: #667eea; }
+    input:checked + .slider:before { transform: translateX(22px); }
+    .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 16px; background: white; }
+    .stat { text-align: center; padding: 12px; background: #f8f9fa; border-radius: 8px; }
+    .stat-value { font-size: 24px; font-weight: 700; color: #667eea; }
+    .stat-label { font-size: 11px; color: #666; text-transform: uppercase; letter-spacing: .5px; }
+    .yt-mode { padding: 12px 16px; background: white; border-top: 1px solid #eee; }
+    .yt-mode label { font-size: 12px; color: #666; margin-right: 8px; }
+    .yt-mode select { padding: 6px 10px; border: 1px solid #ddd; border-radius: 6px; background: white; font-size: 12px; }
+    .actions { padding: 12px 16px; display: flex; gap: 8px; background: white; }
+    .btn { flex: 1; padding: 8px; border: none; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; }
+    .btn-primary { background: #667eea; color: white; }
+    .btn-secondary { background: #f0f0f0; color: #333; }
+    .footer { padding: 12px 16px; text-align: center; font-size: 11px; color: #999; }
   </style>
 </head>
 <body>
-  <div class="header">
-    <!-- Embedded SVG Logo (Guaranteed to Never Disappear) -->
-    <svg class="logo-icon" viewBox="0 0 24 24">
-      <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-5.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8s0 0 0 0z"/>
-    </svg>
-    <div class="title">AeroGuard</div>
-    <div class="badge">Protected</div>
+  <header><h1>🛡️ AeroGuard Pro</h1></header>
+  <div class="status">
+    <div class="toggle">
+      <span>Protection</span>
+      <label class="switch"><input type="checkbox" id="enabled"><span class="slider"></span></label>
+    </div>
   </div>
-
-  <div class="stat-card">
-    <div class="stat-number" id="blockedCount">Active</div>
-    <div class="stat-label">Ultra-DNR Rules Engine</div>
+  <div class="stats">
+    <div class="stat"><div class="stat-value" id="blocked">0</div><div class="stat-label">Blocked</div></div>
+    <div class="stat"><div class="stat-value" id="rate">0%</div><div class="stat-label">Block Rate</div></div>
   </div>
-
-  <script>
-    document.addEventListener('DOMContentLoaded', async () => {
-      try {
-        const rules = await chrome.declarativeNetRequest.getDynamicRules();
-        document.getElementById('blockedCount').textContent = rules.length + " Rules";
-      } catch (e) {
-        document.getElementById('blockedCount').textContent = "Active";
-      }
-    });
-  </script>
+  <div class="stats">
+    <div class="stat"><div class="stat-value" id="ytBlocked">0</div><div class="stat-label">YouTube</div></div>
+    <div class="stat"><div class="stat-value" id="ytRate">0%</div><div class="stat-label">YT Rate</div></div>
+  </div>
+  <div class="yt-mode">
+    <label>YouTube:</label>
+    <select id="ytMode">
+      <option value="basic">Basic (Network only)</option>
+      <option value="standard">Standard (+Player patch)</option>
+      <option value="aggressive">Aggressive (+IMA block)</option>
+    </select>
+  </div>
+  <div class="actions">
+    <button class="btn btn-primary" id="updateBtn">Update Lists</button>
+    <button class="btn btn-secondary" id="optionsBtn">Settings</button>
+  </div>
+  <div class="footer">v2.0.0 • 15 filter lists • ~100K rules</div>
+  <script src="popup.js"></script>
 </body>
 </html>

@@ -1,57 +1,15 @@
-const HIGH_IMPACT_TRACKERS = [
-  // Google Ads & Tracking - wildcard subdomains
-  '*.googlesyndication.com', '*.googleadservices.com', '*.adservice.google.com',
-  '*.google-analytics.com', '*.analytics.google.com', '*.googletagmanager.com',
-  '*.doubleclick.net', '*.googleadservices.com',
+// DNR Compiler - Converts filter lists to DNR rules
+import { FilterListManager, ABPParser as FilterListParser, DNRConverter as DNRRuleConverter } from './filter-list-manager.js';
+import { RuleOptimizer } from './rule-optimizer.js';
 
-  // Meta / Facebook
-  '*.facebook.net', '*.facebook.com',
-
-  // Major Ad Networks
-  '*.criteo.com', '*.criteo.net', '*.taboola.com', '*.outbrain.com', '*.amazon-adsystem.com',
-  '*.media.net', '*.rubiconproject.com', '*.pubmatic.com', '*.openx.net', '*.appnexus.com',
-  '*.adnxs.com', '*.bidswitch.net', '*.casalemedia.com', '*.indexww.com', '*.adroll.com',
-  '*.smartadserver.com', '*.exoclick.com', '*.popads.net', '*.propellerads.com', '*.adsterra.com',
-
-  // Analytics & Session Replays
-  '*.hotjar.com', '*.clarity.ms', '*.sentry.io', '*.bugsnag.com', '*.mixpanel.com',
-  '*.amplitude.com', '*.segment.io', '*.logrocket.com', '*.mouseflow.com', '*.fullstory.com', '*.heap.io',
-
-  // Yandex & Regional
-  '*.yandex.ru', '*.yandex.md', '*.yastatic.net', '*.an.yandex.ru', '*.top-fwz1.mail.ru',
-
-  // Telemetry & Push
-  '*.onesignal.com', '*.appsflyer.com', '*.adjust.com', '*.branch.io', '*.telemetry.microsoft.com',
-  '*.metrics.icloud.com', '*.tracking.miui.com', '*.samsungads.com'
+const TRACKING_PARAMS = [
+  'utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content',
+  'fbclid', 'gclid', 'msclkid', 'mc_eid', 'yclid', '_ga', 'adlt',
+  'gbraid', 'wbraid', 'ttclid', 'li_fat_id', 'twclid', 'igshid',
+  'mc_cid', 'mc_eid'
 ];
 
-export async function deployUltraDnrEngine() {
-  const existingRules = await chrome.declarativeNetRequest.getDynamicRules();
-  const removeRuleIds = existingRules.map(r => r.id);
-
-  const addRules = HIGH_IMPACT_TRACKERS.map((domain, idx) => ({
-    id: 10000 + idx,
-    priority: 1000,
-    action: { type: 'block' },
-    condition: {
-      urlFilter: `||${domain}^`,
-      resourceTypes: [
-        'main_frame', 'sub_frame', 'script', 'xmlhttprequest',
-        'image', 'stylesheet', 'media', 'websocket', 'other', 'ping'
-      ]
-    }
-  }));
-
-  await chrome.declarativeNetRequest.updateDynamicRules({ removeRuleIds, addRules });
-  console.log(`[AeroGuard DNR] ${addRules.length} ultra-priority wildcard rules active.`);
-}
-
 export async function deployQueryStripperRules() {
-  const trackingParams = [
-    'utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content',
-    'fbclid', 'gclid', 'msclkid', 'mc_eid', 'yclid', '_ga', 'adlt'
-  ];
-
   const rule = {
     id: 99999,
     priority: 200,
@@ -60,13 +18,13 @@ export async function deployQueryStripperRules() {
       redirect: {
         transform: {
           queryTransform: {
-            removeParams: trackingParams
+            removeParams: TRACKING_PARAMS
           }
         }
       }
     },
     condition: {
-      urlFilter: '*?*=',
+      urlFilter: '*?*=*',
       resourceTypes: ['main_frame', 'sub_frame']
     }
   };
@@ -76,4 +34,119 @@ export async function deployQueryStripperRules() {
     addRules: [rule]
   });
   console.log('[AeroGuard Stripper] Tracking Parameter Stripper active.');
+}
+
+export async function deployUltraDnrEngine() {
+  const filterListManager = new FilterListManager();
+  await filterListManager.initialize();
+
+  const allRules = [];
+
+  // Get optimized rules from each filter list
+  const rulesets = await filterListManager.getOptimizedRulesets();
+  for (const [name, rules] of Object.entries(rulesets)) {
+    const optimizer = new RuleOptimizer();
+    const optimized = await optimizer.optimize(rules, name);
+    console.log(`[DNR Compiler] ${name}: ${rules.length} -> ${optimized.length} rules`);
+    allRules.push(...optimized);
+  }
+
+  return allRules;
+}
+
+// YouTube-specific DNR rules (high priority)
+export async function deployYouTubeRules() {
+  const ytDomains = ['youtube.com', 'youtube-nocookie.com', 'www.youtube.com', 'm.youtube.com', 'music.youtube.com', 'tv.youtube.com'];
+
+  const rules = [];
+  let id = 80000;
+
+  const blockPatterns = [
+    { url: '||youtube.com/api/stats/ads*', types: ['xmlhttprequest', 'fetch'] },
+    { url: '||youtube.com/api/stats/qoe*', types: ['xmlhttprequest', 'fetch'] },
+    { url: '||youtube.com/ptracking*', types: ['xmlhttprequest', 'fetch', 'ping'] },
+    { url: '||youtube.com/pagead/*', types: ['xmlhttprequest', 'fetch', 'subdocument'] },
+    { url: '||youtube.com/get_video_info*&adformat=*', types: ['xmlhttprequest', 'fetch'] },
+    { url: '||youtube.com/get_video_info*&ad_type=*', types: ['xmlhttprequest', 'fetch'] },
+    { url: '||youtube.com/get_video_info*&ad3_module=*', types: ['xmlhttprequest', 'fetch'] },
+    { url: '||youtube.com/get_video_info*&afv_*', types: ['xmlhttprequest', 'fetch'] },
+    { url: '||youtube.com/get_video_info*&vmap=*', types: ['xmlhttprequest', 'fetch'] },
+    { url: '||youtube.com/get_video_info*&ad_tag=*', types: ['xmlhttprequest', 'fetch'] },
+    { url: '||youtube.com/get_video_info*&ad_url=*', types: ['xmlhttprequest', 'fetch'] },
+    { url: '||youtube.com/annotations_invideo*', types: ['xmlhttprequest', 'fetch'] },
+
+    // Google ad domains
+    { url: '||doubleclick.net/*', types: ['xmlhttprequest', 'fetch', 'subdocument', 'image', 'script'] },
+    { url: '||googlesyndication.com/*', types: ['xmlhttprequest', 'fetch', 'subdocument', 'image', 'script'] },
+    { url: '||googleadservices.com/*', types: ['xmlhttprequest', 'fetch', 'subdocument', 'image', 'script'] },
+    { url: '||googletagmanager.com/*', types: ['xmlhttprequest', 'fetch', 'script'] },
+    { url: '||googletagservices.com/*', types: ['xmlhttprequest', 'fetch', 'script'] },
+    { url: '||pagead2.googlesyndication.com/*', types: ['xmlhttprequest', 'fetch', 'subdocument', 'image', 'script'] },
+    { url: '||pubads.g.doubleclick.net/*', types: ['xmlhttprequest', 'fetch', 'subdocument', 'image', 'script'] },
+    { url: '||securepubads.g.doubleclick.net/*', types: ['xmlhttprequest', 'fetch', 'subdocument', 'image', 'script'] },
+    { url: '||adservice.google.com/*', types: ['xmlhttprequest', 'fetch', 'subdocument', 'image', 'script'] },
+
+    // IMA SDK
+    { url: '||imasdk.googleapis.com/*', types: ['script', 'xmlhttprequest', 'fetch'] },
+    { url: '||imasdk.s3.amazonaws.com/*', types: ['script', 'xmlhttprequest', 'fetch'] },
+
+    // YouTube ad player JS
+    { url: '||s.ytimg.com/yts/jsbin/player-*ad*', types: ['script'] },
+    { url: '||s.ytimg.com/yts/jsbin/*ima*', types: ['script'] },
+    { url: '||s.ytimg.com/yts/jsbin/*ads*', types: ['script'] },
+
+    // Ad subdomains
+    { url: '||ads.youtube.com/*', types: ['xmlhttprequest', 'fetch', 'subdocument', 'image', 'script'] },
+    { url: '||advertising.youtube.com/*', types: ['xmlhttprequest', 'fetch', 'subdocument', 'image', 'script'] },
+    { url: '||partneradvertising.youtube.com/*', types: ['xmlhttprequest', 'fetch', 'subdocument', 'image', 'script'] },
+
+    // Tracking pixels
+    { url: '||googleads.g.doubleclick.net/pagead/viewthroughconversion/*', types: ['image', 'ping'] },
+    { url: '||googleads.g.doubleclick.net/pagead/conversion/*', types: ['image', 'ping'] },
+    { url: '||www.googleadservices.com/pagead/conversion/*', types: ['image', 'ping'] },
+    { url: '||doubleclick.net/activity/*', types: ['image', 'ping'] },
+    { url: '||fls.doubleclick.net/activityi/*', types: ['image', 'ping'] },
+    { url: '||ad.doubleclick.net/activity/*', types: ['image', 'ping'] }
+  ];
+
+  for (const p of blockPatterns) {
+    rules.push({
+      id: id++,
+      priority: 100,
+      action: { type: 'block' },
+      condition: {
+        urlFilter: p.url,
+        resourceTypes: p.types,
+        initiatorDomains: ytDomains
+      }
+    });
+  }
+
+  // ALLOW rules (exceptions) - higher priority
+  const allowPatterns = [
+    { url: '||googlevideo.com/videoplayback*', types: ['media'] },
+    { url: '||*.googlevideo.com/*', types: ['media'] },
+    { url: '||youtube.com/api/stats/watchtime*', types: ['xmlhttprequest', 'fetch'] },
+    { url: '||s.ytimg.com/yts/jsbin/player-*', types: ['script'] },
+    { url: '||s.ytimg.com/yts/jsbin/www-embed-player*', types: ['script'] },
+    { url: '||i.ytimg.com/*', types: ['image'] },
+    { url: '||yt3.ggpht.com/*', types: ['image'] },
+    { url: '||youtube.com/api/timedtext*', types: ['xmlhttprequest', 'fetch'] }
+  ];
+
+  let allowId = 90000;
+  for (const p of allowPatterns) {
+    rules.push({
+      id: allowId++,
+      priority: 2,
+      action: { type: 'allow' },
+      condition: {
+        urlFilter: p.url,
+        resourceTypes: p.types,
+        initiatorDomains: ytDomains
+      }
+    });
+  }
+
+  return rules;
 }

@@ -1,8 +1,9 @@
 /**
- * Cookie Annihilator - Advanced Cookie Protection
- * Targets specific tracker footprints, downgrades long-lived cookies to session,
- * and broadcasts actions to UI for live stats
- * Based on Brave's aggressive cookie protection
+ * Cookie Protection Module
+ * Blocks third-party cookies, partitions cookies by first-party domain,
+ * auto-deletes cookies on tab close, and provides cookie cleaning
+ *
+ * Based on Brave's cookie protection implementation
  */
 
 class CookieProtection {
@@ -20,87 +21,121 @@ class CookieProtection {
     this.deletedCookies = new Map(); // tabId -> [{ cookie, reason }]
     this.cookieStore = new Map(); // partitionKey -> Map(cookieName -> cookie)
 
-    // Common tracking cookie signatures (names)
-    this.trackerNames = new Set([
-      '_ga', '_gid', '_ga_*', '_gcl_au', '_fbp', '_fbc',  // Google Analytics, Facebook
-      'IDE', 'DSID', 'FLC', 'AID', 'TAID', 'exchange_uid', // Google Ads
-      'MUID', 'MR', 'ANON', 'NID', 'DV', // Microsoft, Google
-      'test_cookie', 'YSC', 'VISITOR_INFO1_LIVE', 'GPS', // YouTube
-      'datr', 'c_user', 'xs', 'fr', 'sb', 'dbln', // Facebook
-      'UID', 'UIDR', 'uvc', 'loc', 'bt2', 'di2', 'ssc', 'uid', 'uvc', // AddThis, ShareThis
-      '__utma', '__utmb', '__utmc', '__utmz', '__utmv', '__utmx', // Old GA
-      '_hjid', '_hjIncludedInSample', '_hjAbsoluteSessionInProgress', // Hotjar
-      '_mkto_trk', '_mkt_trk', // Marketo
-      '_pendo_visitorId', '_pendo_accountId', '_pendo_meta_', // Pendo
-      'ajs_anonymous_id', 'ajs_user_id', 'ajs_group_id', // Segment
-      'intercom-id-', 'intercom-session-', // Intercom
-      'drift_aid', 'drift_session_id', // Drift
-      '_cfduid', '__cf_bm', // Cloudflare
-      '_sp_id.*', '_sp_ses.*', // Snowplow
-      '_pk_id.*', '_pk_ses.*', // Matomo
-      '_clck', '_clsk', // Clarity
-      '_tt_enable_cookie', '_ttp', // TikTok
-      '_pin_unauth', '_pinterest_ct_', // Pinterest
-      '_sctr', '_scid', // Snapchat
-      '_rdt_uuid', // Reddit
-      '_lr_', '_lr_hb_', // Lucky Orange
-      '_gcl_aw', '_gcl_dc', '_gcl_ha', '_gcl_gf', // Google Ads
-      'ARRAffinity', 'ARRAffinitySameSite', // Azure
-      'AWSALB', 'AWSALBCORS', // AWS
-      'JSESSIONID', 'SESSION', 'PHPSESSID', 'ASP.NET_SessionId', // Session IDs (if long-lived)
-      'csrf_token', 'xsrf_token', 'auth_token', 'access_token', // Auth tokens (if tracking)
+    // Default whitelist for essential cookies
+    this.defaultWhitelist = new Set([
+      'google.com',
+      'youtube.com',
+      'github.com',
+      'gitlab.com',
+      'stackoverflow.com',
+      'github.io',
+      'gitlab.io',
+      'cloudflare.com',
+      'cloudflare.net',
+      'microsoft.com',
+      'office.com',
+      'live.com',
+      'outlook.com',
+      'apple.com',
+      'icloud.com',
+      'amazon.com',
+      'aws.amazon.com',
+      'paypal.com',
+      'stripe.com',
+      'dropbox.com',
+      'box.com',
+      'drive.google.com',
+      'docs.google.com',
+      'sheets.google.com',
+      'slides.google.com',
+      'forms.google.com',
+      'calendar.google.com',
+      'mail.google.com',
+      'accounts.google.com',
+      'myaccount.google.com',
+      'security.google.com',
+      'passwords.google.com',
+      'takeout.google.com',
+      'contacts.google.com',
+      'keep.google.com',
+      'photos.google.com',
+      'maps.google.com',
+      'earth.google.com',
+      'translate.google.com',
+      'books.google.com',
+      'scholar.google.com',
+      'patents.google.com',
+      'trends.google.com',
+      'alerts.google.com',
+      'shopping.google.com',
+      'finance.google.com',
+      'news.google.com',
+      'flights.google.com',
+      'hotels.google.com',
+      'travel.google.com',
+      'workspace.google.com',
+      'admin.google.com',
+      'cloud.google.com',
+      'console.cloud.google.com',
+      'firebase.google.com',
+      'developers.google.com',
+      'developers.googleusercontent.com',
+      'android.com',
+      'play.google.com',
+      'chrome.google.com',
+      'chromium.org',
+      'web.dev',
+      'developer.chrome.com',
+      'support.google.com',
+      'help.google.com',
+      'policies.google.com',
+      'privacy.google.com',
+      'terms.google.com',
+      'safety.google.com',
+      'families.google.com',
+      'edu.google.com',
+      'research.google.com',
+      'ai.google.com',
+      'blog.google.com',
+      'about.google.com',
+      'sustainability.google.com',
+      'diversity.google.com',
+      'careers.google.com',
+      'jobs.google.com',
+      'blog.google',
+      'googleblog.com',
+      'thinkwithgoogle.com',
+      'grow.google.com',
+      'smallbusiness.google.com',
+      'marketingplatform.google.com',
+      'analytics.google.com',
+      'tagmanager.google.com',
+      'optimize.google.com',
+      'surveys.google.com',
+      'data.studio.google.com',
+      'lookerstudio.google.com',
+      'ads.google.com',
+      'adsmanager.google.com',
+      'admob.google.com',
+      'adsense.google.com',
+      'admanager.google.com',
+      'doubleclick.net',
+      'googleadservices.com',
+      'googlesyndication.com',
+      'googletagmanager.com',
+      'googletagservices.com',
+      'google-analytics.com',
+      'google.com/adsense',
+      'google.com/pagead',
+      'youtube.com/api/stats/ads',
+      'fonts.googleapis.com',
+      'fonts.gstatic.com',
+      'ajax.googleapis.com',
+      'cdn.jsdelivr.net',
+      'cdnjs.cloudflare.com',
+      'unpkg.com'
     ]);
-
-    // Tracker domain patterns for aggressive blocking
-    this.trackerDomainPatterns = [
-      'doubleclick.net', 'googlesyndication.com', 'googleadservices.com',
-      'google-analytics.com', 'analytics.google.com', 'googletagmanager.com',
-      'googletagservices.com', 'facebook.net', 'connect.facebook.net',
-      'pixel.facebook.com', 'facebook.com/tr', 'ads.facebook.com',
-      'amazon-adsystem.com', 'aax.amazon-adsystem.com',
-      'adsystem.amazon.com', 'c.amazon-adsystem.com',
-      'bing.com', 'bat.bing.com', 'ads.msn.com', 'c.msn.com',
-      't.co', 'analytics.twitter.com', 'ads-api.twitter.com',
-      'static.ads-twitter.com', 'adnxs.com', 'rubiconproject.com',
-      'pubmatic.com', 'casalemedia.com', 'openx.net', 'criteo.com',
-      'smartadserver.com', 'adsrvr.org', 'teads.tv', 'bidswitch.net',
-      'moatads.com', 'quantserve.com', 'scorecardresearch.com',
-      'hotjar.com', 'crazyegg.com', 'mixpanel.com', 'segment.com',
-      'api.segment.io', 'cdn.segment.com', 'optimizely.com',
-      'logx.optimizely.com', 'chartbeat.com', 'parsely.com',
-      'imrworldwide.com', 'comscore.com', 'bam.nr-data.net',
-      'browser-intake-datadoghq.com', 'sentry.io', 'bugsnag.com',
-      'amplitude.com', 'mc.yandex.ru', 'hm.baidu.com', 'taboola.com',
-      'outbrain.com', 'revcontent.com', 'mgid.com', 'adblade.com',
-      'adskeeper.co.uk', 'adsupply.com', 'adup-tech.com', 'bidtheatre.com',
-      'bidswitch.net', 'bidtellect.com', 'conversantmedia.com', 'dataxu.com',
-      'districtm.io', 'dyntrk.com', 'eyeviewads.com', 'freewheel.com',
-      'hb-api.com', 'indexexchange.com', 'inner-active.com', 'innity.net',
-      'ipredictive.com', 'krxd.net', 'loopme.me', 'magnite.com',
-      'media.net', 'mediamath.com', 'netmng.com', 'nexage.com',
-      'platform.io', 'prebid.org', 'pulsepoint.com', 'quantcast.com',
-      'realytics.com', 'rhythmone.com', 'rockerbox.com', 'rokt.com',
-      'rtbhouse.com', 'rtk.io', 'rubiconproject.com', 'smaato.net',
-      'smartadserver.com', 'sovrn.com', 'spotx.tv', 'stackadapt.com',
-      'thetradedesk.com', 'tremorvideo.com', 'triplelift.com', 'turn.com',
-      'unruly.co.uk', 'verizonmedia.com', 'vidible.tv', 'videoamp.com',
-      'videoplaza.tv', 'wunderkind.com', 'yieldlab.net', 'yieldmo.com',
-      'yieldoptimizer.com', 'zergnet.com', 'zvelo.com',
-      'adservice.google.com', 'pagead2.googlesyndication.com',
-      'tpc.googlesyndication.com', 'securepubads.g.doubleclick.net',
-      'googleads.g.doubleclick.net', 'stats.g.doubleclick.net',
-      'ad.doubleclick.net', 'cm.g.doubleclick.net', 'fls.doubleclick.net',
-      'adclick.g.doubleclick.net', 'adview.g.doubleclick.net',
-      'cm.g.doubleclick.net', 'fpfn.g.doubleclick.net', 'n4756ad.g.doubleclick.net'
-    ];
   }
-
-  // Configuration setters
-  setEnabled(val) { this.enabled = val; }
-  setBlockThirdParty(val) { this.blockThirdParty = val; }
-  setPartitionCookies(val) { this.partitionCookies = val; }
-  setAutoDeleteOnClose(val) { this.autoDeleteOnClose = val; }
-  setDeleteNonWhitelisted(val) { this.deleteNonWhitelisted = val; }
 
   /**
    * Initialize cookie protection
@@ -111,8 +146,8 @@ class CookieProtection {
       return;
     }
 
-    // Listen for cookie changes - use the optimized handler
-    chrome.cookies.onChanged.addListener(this.handleCookieChange.bind(this));
+    // Listen for cookie changes
+    chrome.cookies.onChanged.addListener(this.handleCookieChanged.bind(this));
 
     // Listen for tab removal to clean up
     if (chrome.tabs && chrome.tabs.onRemoved) {
@@ -124,200 +159,131 @@ class CookieProtection {
       chrome.tabs.onUpdated.addListener(this.handleTabUpdated.bind(this));
     }
 
-    console.log('[CookieProtection] Cookie Annihilator initialized');
+    console.log('[CookieProtection] Initialized');
   }
 
   /**
-   * Main cookie change handler - aggressive tracking cookie destruction
-   */
-  async handleCookieChange(changeInfo) {
-    if (!this.enabled || changeInfo.removed) return;
-
-    const { cookie } = changeInfo;
-    if (!cookie?.domain) return;
-
-    // Only process explicit cookie sets (not updates/overwrites)
-    if (changeInfo.cause !== 'explicit') return;
-
-    const isThirdParty = this.isThirdPartyCookie(cookie);
-    const isKnownTrackerName = this.trackerNames.has(cookie.name);
-    const isTrackerDomain = this.isTrackerDomain(cookie.domain);
-
-    // ACTION 1: Destroy known trackers instantly
-    if (this.blockThirdParty && (isThirdParty || isKnownTrackerName || isTrackerDomain)) {
-      // Skip if whitelisted
-      if (this.isWhitelisted(cookie.domain)) return;
-
-      await this.destroyCookie(cookie);
-      this.broadcastAction('destroyed', cookie.name, cookie.domain, 'tracker');
-      return;
-    }
-
-    // ACTION 2: Force long-lived cookies to expire when browser closes (Session Downgrade)
-    // If a cookie tries to live longer than 24 hours, cut its lifespan
-    const oneDay = 24 * 60 * 60;
-    const isLongLived = cookie.expirationDate &&
-      (cookie.expirationDate - (Date.now() / 1000) > oneDay);
-
-    if (this.autoDeleteOnClose && !cookie.session && isLongLived) {
-      // Don't downgrade whitelisted domains
-      if (this.isWhitelisted(cookie.domain)) return;
-
-      await this.downgradeToSession(cookie);
-      this.broadcastAction('downgraded', cookie.name, cookie.domain, 'long-lived');
-    }
-  }
-
-  /**
-   * Check if cookie is third-party (heuristic)
-   */
-  isThirdPartyCookie(cookie) {
-    const domain = cookie.domain.toLowerCase().replace(/^\./, '');
-
-    // Cookies starting with dot are typically third-party
-    if (cookie.domain.startsWith('.')) return true;
-
-    // Check for tracking-related subdomains
-    const trackingSubdomains = ['tracking', 'analytics', 'metrics', 'stats', 'pixel', 'beacon', 'collect'];
-    return trackingSubdomains.some(sub => domain.includes(sub));
-  }
-
-  /**
-   * Check if domain is a known tracker
-   */
-  isTrackerDomain(domain) {
-    const normalized = domain.toLowerCase().replace(/^\./, '');
-
-    // Exact match
-    if (this.trackerDomainPatterns.some(d => normalized === d || normalized.endsWith('.' + d))) {
-      return true;
-    }
-
-    // Check for tracking patterns in domain
-    const trackingPatterns = [
-      'analytics', 'tracking', 'tracker', 'pixel', 'beacon',
-      'telemetry', 'metrics', 'stats', 'monitor', 'collect',
-      'adserver', 'adserver', 'adclick', 'adtrack', 'adsystem',
-      'adserver', 'advertising', 'adservices', 'adtech',
-      'yield', 'bid', 'rtb', 'ssp', 'dsp', 'exchange'
-    ];
-
-    return trackingPatterns.some(pattern => normalized.includes(pattern));
-  }
-
-  /**
-   * Check if cookie name is a known tracker
-   */
-  isTrackerName(name) {
-    // Exact match
-    if (this.trackerNames.has(name)) return true;
-
-    // Pattern match for wildcard entries
-    for (const tracker of this.trackerNames) {
-      if (tracker.endsWith('*') || tracker.endsWith('.*')) {
-        const prefix = tracker.replace(/\*|\.\*/, '');
-        if (name.startsWith(prefix)) return true;
-      }
-      if (tracker.startsWith('*') || tracker.startsWith('.*')) {
-        const suffix = tracker.replace(/\*|\.\*/, '');
-        if (name.endsWith(suffix)) return true;
-      }
-    }
-    return false;
-  }
-
-  /**
-   * Destroy cookie instantly
-   */
-  async destroyCookie(cookie) {
-    const protocol = cookie.secure ? 'https:' : 'http:';
-    const cleanDomain = cookie.domain.replace(/^\./, '');
-    const url = `${protocol}//${cleanDomain}${cookie.path || '/'}`;
-
-    try {
-      await chrome.cookies.remove({
-        url,
-        name: cookie.name,
-        storeId: cookie.storeId
-      });
-
-      this.recordBlockedCookie(cookie, 'tracker_destroyed');
-    } catch (error) {
-      console.debug(`[AeroGuard] Failed to nuke cookie ${cookie.name}:`, error.message);
-    }
-  }
-
-  /**
-   * Downgrade long-lived cookie to session cookie
-   */
-  async downgradeToSession(cookie) {
-    const protocol = cookie.secure ? 'https:' : 'http:';
-    const cleanDomain = cookie.domain.replace(/^\./, '');
-    const url = `${protocol}//${cleanDomain}${cookie.path || '/'}`;
-
-    try {
-      // Re-create the cookie without an expiration date (makes it a session cookie)
-      await chrome.cookies.set({
-        url,
-        name: cookie.name,
-        value: cookie.value,
-        domain: cookie.domain,
-        path: cookie.path,
-        secure: cookie.secure,
-        httpOnly: cookie.httpOnly,
-        sameSite: cookie.sameSite,
-        storeId: cookie.storeId
-        // No expirationDate = session cookie
-      });
-
-      this.recordBlockedCookie(cookie, 'downgraded_to_session');
-    } catch (error) {
-      console.debug(`[AeroGuard] Failed to downgrade cookie ${cookie.name}:`, error.message);
-    }
-  }
-
-  /**
-   * Broadcast action to UI for live stats
-   */
-  broadcastAction(action, name, domain, reason) {
-    // Send a message to the popup UI so the user can see live stats
-    chrome.runtime.sendMessage({
-      type: 'COOKIE_ACTION',
-      payload: { action, name, domain, reason, time: Date.now() }
-    }).catch(() => {
-      // Ignore errors if the popup isn't currently open
-    });
-  }
-
-  /**
-   * Record blocked cookie for statistics
-   */
-  recordBlockedCookie(cookie, reason) {
-    console.log(`[CookieProtection] ${reason}: ${cookie.name} from ${cookie.domain}`);
-  }
-
-  /**
-   * Legacy handler for backward compatibility
+   * Handle cookie changes
    */
   handleCookieChanged(changeInfo) {
-    this.handleCookieChange(changeInfo);
-  }
-
-  /**
-   * Handle tab removal - clean up cookies if auto-delete enabled
-   */
-  async handleTabRemoved(tabId, removeInfo) {
-    if (!this.enabled || !this.autoDeleteOnClose) return;
-    if (!removeInfo.isWindowClosing) return;
-  }
-
-  /**
-   * Handle tab updated - check cookies for the new URL
-   */
-  async handleTabUpdated(tabId, changeInfo, tab) {
     if (!this.enabled) return;
-    if (changeInfo.status !== 'complete') return;
-    if (!tab.url) return;
+    if (!changeInfo.cookie) return;
+
+    const cookie = changeInfo.cookie;
+    const cause = changeInfo.cause;
+
+    // Check if this is a third-party cookie being set
+    if (cause === 'explicit' && this.blockThirdParty) {
+      if (this.isThirdPartyCookie(cookie)) {
+        // Check if domain is whitelisted
+        if (!this.isWhitelisted(cookie.domain)) {
+          // Block this cookie by removing it
+          this.removeCookie(cookie);
+          this.recordBlockedCookie(cookie, 'third_party_blocked');
+        }
+      }
+    }
+
+    // Handle session-only cookies
+    if (this.sessionOnlyDomains.has(this.normalizeDomain(cookie.domain))) {
+      if (!cookie.session) {
+        // Convert to session cookie by removing expiration
+        this.makeSessionCookie(cookie);
+      }
+    }
+  }
+
+  /**
+   * Check if a cookie is third-party relative to the current page
+   */
+  isThirdPartyCookie(cookie) {
+    // This is a simplified check - in practice, we'd need the tab's URL
+    // For now, we check if the cookie domain doesn't match common first-party patterns
+    const domain = this.normalizeDomain(cookie.domain);
+
+    // If it's a known first-party domain pattern, it's not third-party
+    // This is a heuristic - real implementation would compare with tab URL
+    return false; // We'll implement per-tab checking
+  }
+
+  /**
+   * Check if a cookie is third-party for a specific tab URL
+   */
+  isThirdPartyForUrl(cookie, tabUrl) {
+    try {
+      const tabDomain = new URL(tabUrl).hostname.toLowerCase().replace(/^www\./, '');
+      const cookieDomain = this.normalizeDomain(cookie.domain);
+
+      // Check if cookie domain matches tab domain or is a parent domain
+      if (cookieDomain === tabDomain) return false;
+      if (tabDomain.endsWith('.' + cookieDomain)) return false;
+      if (cookieDomain.endsWith('.' + tabDomain)) return false;
+
+      // Check if both are subdomains of the same registrable domain
+      const tabRegistrable = this.getRegistrableDomain(tabDomain);
+      const cookieRegistrable = this.getRegistrableDomain(cookieDomain);
+
+      return tabRegistrable !== cookieRegistrable;
+    } catch (e) {
+      return true; // Assume third-party on error
+    }
+  }
+
+  /**
+   * Get the registrable domain (eTLD+1)
+   */
+  getRegistrableDomain(domain) {
+    // Simplified - in production, use Public Suffix List
+    const parts = domain.split('.');
+    if (parts.length <= 2) return domain;
+
+    // Known TLDs that have two-part suffixes
+    const twoPartTlds = new Set([
+      'co.uk', 'co.jp', 'co.kr', 'co.nz', 'co.za', 'co.il', 'co.in',
+      'com.au', 'com.br', 'com.cn', 'com.mx', 'com.tr', 'com.tw',
+      'org.uk', 'org.au', 'net.uk', 'net.au',
+      'gov.uk', 'gov.au', 'edu.au', 'ac.uk', 'ac.jp',
+      'ne.jp', 'or.jp', 'gr.jp', 'ed.jp', 'go.jp', 'lg.jp'
+    ]);
+
+    for (let i = parts.length - 2; i >= 0; i--) {
+      const suffix = parts.slice(i).join('.');
+      if (twoPartTlds.has(suffix)) {
+        if (i > 0) return parts.slice(i - 1).join('.');
+        return suffix;
+      }
+    }
+
+    // Default: last two parts
+    return parts.slice(-2).join('.');
+  }
+
+  /**
+   * Normalize domain (remove leading dot, lowercase)
+   */
+  normalizeDomain(domain) {
+    return domain.replace(/^\./, '').toLowerCase();
+  }
+
+  /**
+   * Check if domain is whitelisted
+   */
+  isWhitelisted(domain) {
+    const normalized = this.normalizeDomain(domain);
+
+    // Check exact match
+    if (this.whitelistedDomains.has(normalized)) return true;
+    if (this.defaultWhitelist.has(normalized)) return true;
+
+    // Check parent domains
+    const parts = normalized.split('.');
+    for (let i = 1; i < parts.length; i++) {
+      const parent = parts.slice(i).join('.');
+      if (this.whitelistedDomains.has(parent)) return true;
+      if (this.defaultWhitelist.has(parent)) return true;
+    }
+
+    return false;
   }
 
   /**
@@ -349,31 +315,234 @@ class CookieProtection {
   }
 
   /**
-   * Check if domain is whitelisted
+   * Remove a cookie
    */
-  isWhitelisted(domain) {
-    const normalized = this.normalizeDomain(domain);
+  async removeCookie(cookie) {
+    if (typeof chrome === 'undefined' || !chrome.cookies) return;
 
-    // Check exact match
-    if (this.whitelistedDomains.has(normalized)) return true;
-    if (this.defaultWhitelist.has(normalized)) return true;
-
-    // Check parent domains
-    const parts = normalized.split('.');
-    for (let i = 1; i < parts.length; i++) {
-      const parent = parts.slice(i).join('.');
-      if (this.whitelistedDomains.has(parent)) return true;
-      if (this.defaultWhitelist.has(parent)) return true;
+    try {
+      await chrome.cookies.remove({
+        url: `https://${cookie.domain}${cookie.path}`,
+        name: cookie.name,
+        storeId: cookie.storeId
+      });
+    } catch (e) {
+      console.warn('[CookieProtection] Failed to remove cookie:', e);
     }
-
-    return false;
   }
 
   /**
-   * Normalize domain (remove leading dot, lowercase)
+   * Make a cookie session-only
    */
-  normalizeDomain(domain) {
-    return domain.replace(/^\./, '').toLowerCase();
+  async makeSessionCookie(cookie) {
+    if (typeof chrome === 'undefined' || !chrome.cookies) return;
+
+    try {
+      // Remove the existing cookie
+      await chrome.cookies.remove({
+        url: `https://${cookie.domain}${cookie.path}`,
+        name: cookie.name,
+        storeId: cookie.storeId
+      });
+
+      // Set it again without expiration
+      await chrome.cookies.set({
+        url: `https://${cookie.domain}${cookie.path}`,
+        name: cookie.name,
+        value: cookie.value,
+        domain: cookie.domain,
+        path: cookie.path,
+        secure: cookie.secure,
+        httpOnly: cookie.httpOnly,
+        sameSite: cookie.sameSite,
+        storeId: cookie.storeId
+        // No expirationDate = session cookie
+      });
+    } catch (e) {
+      console.warn('[CookieProtection] Failed to make session cookie:', e);
+    }
+  }
+
+  /**
+   * Record a blocked cookie
+   */
+  recordBlockedCookie(cookie, reason) {
+    // We'd need the tab ID to properly track this
+    // For now, just log
+    console.log('[CookieProtection] Blocked cookie:', cookie.name, 'from', cookie.domain, 'reason:', reason);
+  }
+
+  /**
+   * Handle tab removal - clean up cookies if auto-delete enabled
+   */
+  async handleTabRemoved(tabId, removeInfo) {
+    if (!this.enabled || !this.autoDeleteOnClose) return;
+    if (!removeInfo.isWindowClosing) return; // Only clean up on window close
+
+    // This would require tracking which tabs belong to which window
+    // For now, we'll clean up on a per-tab basis if configured
+  }
+
+  /**
+   * Handle tab updated - check cookies for the new URL
+   */
+  async handleTabUpdated(tabId, changeInfo, tab) {
+    if (!this.enabled) return;
+    if (changeInfo.status !== 'complete') return;
+    if (!tab.url) return;
+
+    // Scan cookies for this URL and block third-party ones
+    await this.scanAndCleanCookies(tabId, tab.url);
+  }
+
+  /**
+   * Scan and clean cookies for a specific URL
+   */
+  async scanAndCleanCookies(tabId, url) {
+    if (typeof chrome === 'undefined' || !chrome.cookies) return;
+
+    try {
+      const cookies = await chrome.cookies.getAll({ url });
+
+      for (const cookie of cookies) {
+        if (this.isThirdPartyForUrl(cookie, url)) {
+          if (!this.isWhitelisted(cookie.domain)) {
+            await this.removeCookie(cookie);
+            this.recordDeletedCookie(tabId, cookie, 'third_party_cleanup');
+          }
+        }
+
+        // Handle session-only domains
+        if (this.sessionOnlyDomains.has(this.normalizeDomain(cookie.domain))) {
+          if (!cookie.session) {
+            await this.makeSessionCookie(cookie);
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('[CookieProtection] Failed to scan cookies:', e);
+    }
+  }
+
+  /**
+   * Record a deleted cookie
+   */
+  recordDeletedCookie(tabId, cookie, reason) {
+    if (!this.deletedCookies.has(tabId)) {
+      this.deletedCookies.set(tabId, []);
+    }
+    this.deletedCookies.get(tabId).push({
+      name: cookie.name,
+      domain: cookie.domain,
+      reason,
+      timestamp: Date.now()
+    });
+  }
+
+  /**
+   * Clean all cookies for a tab
+   */
+  async cleanTabCookies(tabId, url) {
+    if (typeof chrome === 'undefined' || !chrome.cookies) return;
+
+    try {
+      const cookies = await chrome.cookies.getAll({ url });
+      let cleaned = 0;
+
+      for (const cookie of cookies) {
+        if (!this.isWhitelisted(cookie.domain)) {
+          await this.removeCookie(cookie);
+          this.recordDeletedCookie(tabId, cookie, 'manual_cleanup');
+          cleaned++;
+        }
+      }
+
+      return cleaned;
+    } catch (e) {
+      console.warn('[CookieProtection] Failed to clean cookies:', e);
+      return 0;
+    }
+  }
+
+  /**
+   * Clean all non-whitelisted cookies globally
+   */
+  async cleanAllCookies() {
+    if (typeof chrome === 'undefined' || !chrome.cookies) return;
+
+    try {
+      const cookies = await chrome.cookies.getAll({});
+      let cleaned = 0;
+
+      for (const cookie of cookies) {
+        if (!this.isWhitelisted(cookie.domain)) {
+          await this.removeCookie(cookie);
+          cleaned++;
+        }
+      }
+
+      return cleaned;
+    } catch (e) {
+      console.warn('[CookieProtection] Failed to clean all cookies:', e);
+      return 0;
+    }
+  }
+
+  /**
+   * Get cookie statistics for a tab
+   */
+  async getTabCookieStats(tabId, url) {
+    if (typeof chrome === 'undefined' || !chrome.cookies) return null;
+
+    try {
+      const cookies = await chrome.cookies.getAll({ url });
+
+      let firstParty = 0;
+      let thirdParty = 0;
+      let session = 0;
+      let persistent = 0;
+      let secure = 0;
+      let httpOnly = 0;
+      let sameSiteStrict = 0;
+      let sameSiteLax = 0;
+      let sameSiteNone = 0;
+
+      for (const cookie of cookies) {
+        if (this.isThirdPartyForUrl(cookie, url)) {
+          thirdParty++;
+        } else {
+          firstParty++;
+        }
+
+        if (cookie.session) session++; else persistent++;
+        if (cookie.secure) secure++;
+        if (cookie.httpOnly) httpOnly++;
+
+        switch (cookie.sameSite) {
+          case 'strict': sameSiteStrict++; break;
+          case 'lax': sameSiteLax++; break;
+          case 'no_restriction': sameSiteNone++; break;
+        }
+      }
+
+      return {
+        total: cookies.length,
+        firstParty,
+        thirdParty,
+        session,
+        persistent,
+        secure,
+        httpOnly,
+        sameSiteStrict,
+        sameSiteLax,
+        sameSiteNone,
+        blocked: this.blockedCookies.get(tabId)?.length || 0,
+        deleted: this.deletedCookies.get(tabId)?.length || 0
+      };
+    } catch (e) {
+      console.warn('[CookieProtection] Failed to get cookie stats:', e);
+      return null;
+    }
   }
 
   /**
@@ -390,39 +559,50 @@ class CookieProtection {
       defaultWhitelistCount: this.defaultWhitelist.size,
       sessionOnlyDomainsCount: this.sessionOnlyDomains.size,
       blockedCookiesCount: Array.from(this.blockedCookies.values()).reduce((a, b) => a + b.length, 0),
-      deletedCookiesCount: Array.from(this.deletedCookies.values()).reduce((a, b) => a + b.length, 0),
-      trackerNamesCount: this.trackerNames.size,
-      trackerDomainsCount: this.trackerDomainPatterns.length
+      deletedCookiesCount: Array.from(this.deletedCookies.values()).reduce((a, b) => a + b.length, 0)
     };
   }
 
   /**
-   * Clear all data
+   * Set enabled state
    */
-  clearData() {
-    this.blockedCookies.clear();
-    this.deletedCookies.clear();
-    this.cookieStore.clear();
+  setEnabled(enabled) {
+    this.enabled = enabled;
   }
 
   /**
-   * Clear cookies for a tab (for tab removal)
+   * Set block third-party cookies
    */
-  async clearTabCookies(tabId) {
-    if (typeof chrome === 'undefined' || !chrome.cookies) return;
+  setBlockThirdParty(block) {
+    this.blockThirdParty = block;
+  }
 
-    try {
-      const cookies = await chrome.cookies.getAll({});
-      for (const cookie of cookies) {
-        await chrome.cookies.remove({
-          url: `https://${cookie.domain}${cookie.path}`,
-          name: cookie.name,
-          storeId: cookie.storeId
-        });
-      }
-    } catch (e) {
-      console.warn('[CookieProtection] Failed to clear tab cookies:', e);
-    }
+  /**
+   * Set partition cookies
+   */
+  setPartitionCookies(partition) {
+    this.partitionCookies = partition;
+  }
+
+  /**
+   * Set auto-delete on close
+   */
+  setAutoDeleteOnClose(autoDelete) {
+    this.autoDeleteOnClose = autoDelete;
+  }
+
+  /**
+   * Set partition cookies
+   */
+  setPartitionCookies(enabled) {
+    this.partitionCookies = enabled;
+  }
+
+  /**
+   * Set delete non-whitelisted
+   */
+  setDeleteNonWhitelisted(deleteNonWhitelisted) {
+    this.deleteNonWhitelisted = deleteNonWhitelisted;
   }
 
   /**
@@ -461,6 +641,76 @@ class CookieProtection {
     }
     if (data.deleteNonWhitelisted !== undefined) {
       this.deleteNonWhitelisted = data.deleteNonWhitelisted;
+    }
+  }
+
+  /**
+   * Clear all data
+   */
+  clearData() {
+    this.blockedCookies.clear();
+    this.deletedCookies.clear();
+    this.cookieStore.clear();
+  }
+
+  /**
+   * Clear cookies for a tab (for tab removal)
+   */
+  async clearTabCookies(tabId) {
+    if (typeof chrome === 'undefined' || !chrome.cookies) return;
+
+    try {
+      const cookies = await chrome.cookies.getAll({});
+      for (const cookie of cookies) {
+        await chrome.cookies.remove({
+          url: `https://${cookie.domain}${cookie.path}`,
+          name: cookie.name,
+          storeId: cookie.storeId
+        });
+      }
+    } catch (e) {
+      console.warn('[CookieProtection] Failed to clear tab cookies:', e);
+    }
+  }
+
+  /**
+   * Inject cookie protection into a tab
+   */
+  async injectContentScript(tabId) {
+    if (typeof chrome === 'undefined' || !chrome.scripting) return;
+
+    try {
+      await chrome.scripting.executeScript({
+        target: { tabId },
+        func: () => {
+          // Cookie protection is automatically applied when the content script loads
+          if (window.CookieProtection && !window.cookieProtection) {
+            window.cookieProtection = new CookieProtection();
+            // Note: Cookie protection mainly works in service worker
+          }
+        }
+      });
+    } catch (error) {
+      console.warn('[CookieProtection] Failed to inject content script:', error);
+    }
+  }
+
+  /**
+   * Update content script config
+   */
+  async updateContentScriptConfig(tabId, settings) {
+    try {
+      await chrome.scripting.executeScript({
+        target: { tabId },
+        func: (config) => {
+          if (window.cookieProtection) {
+            // Cookie protection settings are mainly handled in service worker
+          }
+        },
+        args: [settings]
+      });
+    } catch (error) {
+      console.warn('[CookieProtection] Failed to update config:', error);
     }
   }
 }

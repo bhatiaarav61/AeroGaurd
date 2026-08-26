@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AeroGuard Ultra — Settings</title>
+  <link rel="stylesheet" href="options.css">
+</head>
+<body>
+  <div class="options-container">
+    <!-- Sidebar Navigation -->
+    <nav class="sidebar" role="navigation" aria-label="Settings sections">
+      <div class="sidebar-header">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="2" y="2" width="20" height="20" rx="4" ry="4"/>
+          <path d="M9 12l2 2 4-4"/>
+          <line x1="6" y1="18" x2="18" y2="18"/>
+        </svg>
+        <span>AeroGuard Ultra</span>
+      </div>
+      <ul class="nav-list" role="tablist">
+        <li role="presentation"><button class="nav-item active" role="tab" data-section="general" aria-selected="true">General</button></li>
+        <li role="presentation"><button class="nav-item" role="tab" data-section="filter-lists" aria-selected="false">Filter Lists</button></li>
+        <li role="presentation"><button class="nav-item" role="tab" data-section="youtube" aria-selected="false">YouTube</button></li>
+        <li role="presentation"><button class="nav-item" role="tab" data-section="cosmetic" aria-selected="false">Cosmetic</button></li>
+        <li role="presentation"><button class="nav-item" role="tab" data-section="privacy" aria-selected="false">Privacy</button></li>
+        <li role="presentation"><button class="nav-item" role="tab" data-section="advanced" aria-selected="false">Advanced</button></li>
+      </ul>
+      <div class="sidebar-footer">
+        <span class="version">v5.0.0</span>
+      </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content" role="main">
+      <!-- General Section -->
+      <section class="content-section active" id="general" role="tabpanel" aria-labelledby="general-tab">
+        <header class="section-header">
+          <h1>General Settings</h1>
+          <p>Core protection settings and behavior</p>
+        </header>
+
+        <div class="setting-group">
+          <h2>Protection</h2>
+          <div class="setting-row">
+            <div class="setting-info">
+              <h3>Enable Protection</h3>
+              <p>Master toggle for all ad blocking</p>
+            </div>
+            <label class="toggle-large">
+              <input type="checkbox" id="enabledToggle" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="setting-row">
+            <div class="setting-info">
+              <h3>Auto-Update Filter Lists</h3>
+              <p>Automatically download latest filter lists</p>
+            </div>
+            <label class="toggle-large">
+              <input type="checkbox" id="autoUpdateToggle" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="setting-row">
+            <div class="setting-info">
+              <h3>Update Interval</h3>
+              <p>How often to check for filter list updates</p>
+            </div>
+            <select id="updateInterval" class="select">
+              <option value="1">Every hour</option>
+              <option value="6" selected>Every 6 hours</option>
+              <option value="12">Every 12 hours</option>
+              <option value="24">Once daily</option>
+              <option value="168">Once weekly</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="setting-group">
+          <h2>Behavior</h2>
+          <div class="setting-row">
+            <div class="setting-info">
+              <h3>Debug Mode</h3>
+              <p>Enable verbose logging in console</p>
+            </div>
+            <label class="toggle-large">
+              <input type="checkbox" id="debugToggle">
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="setting-row">
+            <div class="setting-info">
+              <h3>Show Notification on Update</h3>
+              <p>Display toast when filter lists update</p>
+            </div>
+            <label class="toggle-large">
+              <input type="checkbox" id="notifyUpdateToggle" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+        </div>
+      </section>
+
+      <!-- Filter Lists Section -->
+      <section class="content-section" id="filter-lists" role="tabpanel" aria-labelledby="filter-lists-tab">
+        <header class="section-header">
+          <h1>Filter Lists</h1>
+          <p>Manage 25+ built-in filter lists</p>
+        </header>
+
+        <div class="toolbar">
+          <div class="toolbar-left">
+            <input type="text" id="filterSearch" class="search-input" placeholder="Search filter lists...">
+          </div>
+          <div class="toolbar-right">
+            <button class="btn btn-secondary" id="enableAllBtn">Enable All</button>
+            <button class="btn btn-secondary" id="disableAllBtn">Disable All</button>
+            <button class="btn btn-primary" id="addCustomListBtn">+ Add Custom List</button>
+          </div>
+        </div>
+
+        <div class="filter-lists-table" id="filterListsContainer">
+          <table>
+            <thead>
+              <tr>
+                <th>Status</th>
+                <th>Name</th>
+                <th>Category</th>
+                <th>Rules</th>
+                <th>Last Updated</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="filterListsBody">
+              <tr><td colspan="6" class="loading">Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="custom-lists-section">
+          <h2>Custom Filter Lists</h2>
+          <div id="customListsContainer"></div>
+        </div>
+      </section>
+
+      <!-- YouTube Section -->
+      <section class="content-section" id="youtube" role="tabpanel" aria-labelledby="youtube-tab">
+        <header class="section-header">
+          <h1>YouTube Protection</h1>
+          <p>Configure YouTube ad blocking behavior</p>
+        </header>
+
+        <div class="setting-group">
+          <h2>Blocking Mode</h2>
+          <div class="mode-cards">
+            <label class="mode-card" data-mode="basic">
+              <input type="radio" name="youtubeMode" value="basic">
+              <div class="mode-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="2" y="2" width="20" height="20" rx="4"/>
+                </svg>
+              </div>
+              <div class="mode-info">
+                <h3>Basic</h3>
+                <p>Network-level blocking only (DNR rules)</p>
+              </div>
+              <ul class="mode-features">
+                <li>✓ Block ad requests</li>
+                <li>✓ Block tracking</li>
+                <li>✗ No player patching</li>
+                <li>✗ No cosmetic filtering</li>
+              </ul>
+            </label>
+
+            <label class="mode-card" data-mode="standard">
+              <input type="radio" name="youtubeMode" value="standard">
+              <div class="mode-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="2" y="2" width="20" height="20" rx="4"/>
+                  <path d="M9 12l2 2 4-4"/>
+                </svg>
+              </div>
+              <div class="mode-info">
+                <h3>Standard</h3>
+                <p>Network + Player patching + Consent removal</p>
+              </div>
+              <ul class="mode-features">
+                <li>✓ All Basic features</li>
+                <li>✓ Player response surgery</li>
+                <li>✓ ytInitialData cleaning</li>
+                <li>✓ Consent banner removal</li>
+              </ul>
+            </label>
+
+            <label class="mode-card selected" data-mode="aggressive">
+              <input type="radio" name="youtubeMode" value="aggressive" checked>
+              <div class="mode-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                  <path d="M2 17l10 5 10-5"/>
+                  <path d="M2 12l10 5 10-5"/>
+                </svg>
+              </div>
+              <div class="mode-info">
+                <h3>Aggressive <span class="badge">Recommended</span></h3>
+                <p>All features + IMA neutralization + Heuristics</p>
+              </div>
+              <ul class="mode-features">
+                <li>✓ All Standard features</li>
+                <li>✓ IMA SDK complete neutralization</li>
+                <li>✓ Heuristic ad detection</li>
+                <li>✓ SponsorBlock integration</li>
+                <li>✓ Live stream ad interception</li>
+                <li>✓ Generic ad network blocking</li>
+              </ul>
+            </label>
+          </div>
+        </div>
+
+        <div class="setting-group">
+          <h2>Advanced YouTube Settings</h2>
+          <div class="setting-row">
+            <div class="setting-info">
+              <h3>Block Sponsor Segments</h3>
+              <p>Use SponsorBlock database to skip sponsored content</p>
+            </div>
+            <label class="toggle-large">
+              <input type="checkbox" id="sponsorBlockToggle" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="setting-row">
+            <div class="setting-info">
+              <h3>Skip Mid-roll Ads</h3>
+              <p>Automatically skip video ad segments</p>
+            </div>
+            <label class="toggle-large">
+              <input type="checkbox" id="skipMidrollToggle" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="setting-row">
+            <div class="setting-info">
+              <h3>Hide Overlay Ads</h3>
+              <p>Remove banner/companion overlays during playback</p>
+            </div>
+            <label class="toggle-large">
+              <input type="checkbox" id="hideOverlayToggle" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+        </div>
+      </section>
+
+      <!-- Cosmetic Section -->
+      <section class="content-section" id="cosmetic" role="tabpanel" aria-labelledby="cosmetic-tab">
+        <header class="section-header">
+          <h1>Cosmetic Filtering</h1>
+          <p>DOM element hiding and layout protection</p>
+        </header>
+
+        <div class="setting-group">
+          <h2>Element Hiding</h2>
+          <div class="setting-row">
+            <div class="setting-info">
+              <h3>Enable Cosmetic Filtering</h3>
+              <p>Hide ad elements on all pages</p>
+            </div>
+            <label class="toggle-large">
+              <input type="checkbox" id="cosmeticEnabledToggle" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="setting-row">
+            <div class="setting-info">
+              <h3>Zero Layout Shift</h3>
+              <p>Reserve space for hidden elements to prevent layout jumps</p>
+            </div>
+            <label class="toggle-large">
+              <input type="checkbox" id="layoutShiftToggle" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="setting-row">
+            <div class="setting-info">
+              <h3>Shadow DOM Piercing</h3>
+              <p>Hide ads inside Shadow DOM (web components)</p>
+            </div>
+            <label class="toggle-large">
+              <input type="checkbox" id="shadowDomToggle" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+        </div>
+
+        <div class="setting-group">
+          <h2>Annoyance Removal</h2>
+          <div class="setting-row">
+            <div class="setting-info">
+              <h3>Cookie/GDPR Consent Banners</h3>
+              <p>Auto-hide or auto-accept cookie notices</p>
+            </div>
+            <label class="toggle-large">
+              <input type="checkbox" id="consentToggle" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="setting-row">
+            <div class="setting-info">
+              <h3>Newsletter Popups</h3>
+              <p>Remove email capture overlays</p>
+            </div>
+            <label class="toggle-large">
+              <input type="checkbox" id="newsletterToggle" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="setting-row">
+            <div class="setting-info">
+              <h3>Sticky/Anchor Ads</h3>
+              <p>Remove fixed-position ad bars</p>
+            </div>
+            <label class="toggle-large">
+              <input type="checkbox" id="stickyToggle" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+        </div>
+      </section>
+
+      <!-- Privacy Section -->
+      <section class="content-section" id="privacy" role="tabpanel" aria-labelledby="privacy-tab">
+        <header class="section-header">
+          <h1>Privacy & Anti-Fingerprinting</h1>
+          <p>Protection against tracking and fingerprinting</p>
+        </header>
+
+        <div class="setting-group">
+          <h2>Anti-Fingerprinting</h2>
+          <div class="setting-row">
+            <div class="setting-info">
+              <h3>Canvas Fingerprinting</h3>
+              <p>Add noise to canvas readback</p>
+            </div>
+            <label class="toggle-large">
+              <input type="checkbox" id="canvasFpToggle" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="setting-row">
+            <div class="setting-info">
+              <h3>WebGL Fingerprinting</h3>
+              <p>Mask WebGL renderer/vendor strings</p>
+            </div>
+            <label class="toggle-large">
+              <input type="checkbox" id="webglFpToggle" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="setting-row">
+            <div class="setting-info">
+              <h3>Audio Context Fingerprinting</h3>
+              <p>Add noise to audio signal processing</p>
+            </div>
+            <label class="toggle-large">
+              <input type="checkbox" id="audioFpToggle" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="setting-row">
+            <div class="setting-info">
+              <h3>Font Fingerprinting</h3>
+              <p>Limit font enumeration</p>
+            </div>
+            <label class="toggle-large">
+              <input type="checkbox" id="fontFpToggle" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="setting-row">
+            <div class="setting-info">
+              <h3>Battery API</h3>
+              <p>Mask battery status API</p>
+            </div>
+            <label class="toggle-large">
+              <input type="checkbox" id="batteryFpToggle" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+        </div>
+
+        <div class="setting-group">
+          <h2>Anti-Tracking</h2>
+          <div class="setting-row">
+            <div class="setting-info">
+              <h3>Block Tracking Pixels</h3>
+              <p>Block 1x1 pixel trackers and beacons</p>
+            </div>
+            <label class="toggle-large">
+              <input type="checkbox" id="trackingPixelsToggle" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="setting-row">
+            <div class="setting-info">
+              <h3>Block CNAME Cloaking</h3>
+              <p>Uncloak trackers hiding behind CNAME records</p>
+            </div>
+            <label class="toggle-large">
+              <input type="checkbox" id="cnameToggle" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="setting-row">
+            <div class="setting-info">
+              <h3>HTTPS Upgrade</h3>
+              <p>Upgrade insecure requests to HTTPS</p>
+            </div>
+            <label class="toggle-large">
+              <input type="checkbox" id="httpsUpgradeToggle" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+        </div>
+      </section>
+
+      <!-- Advanced Section -->
+      <section class="content-section" id="advanced" role="tabpanel" aria-labelledby="advanced-tab">
+        <header class="section-header">
+          <h1>Advanced Settings</h1>
+          <p>Power user configuration and diagnostics</p>
+        </header>
+
+        <div class="setting-group">
+          <h2>Custom Rules</h2>
+          <div class="custom-rules-toolbar">
+            <h3>User-Defined Rules</h3>
+            <button class="btn btn-primary" id="addCustomRuleBtn">+ Add Rule</button>
+          </div>
+          <div class="custom-rules-list" id="customRulesContainer">
+            <div class="empty-state">No custom rules yet. Click "Add Rule" to create one.</div>
+          </div>
+        </div>
+
+        <div class="setting-group">
+          <h2>Data Management</h2>
+          <div class="data-actions">
+            <div class="data-action">
+              <div class="data-info">
+                <h3>Export Settings</h3>
+                <p>Download all settings as JSON file</p>
+              </div>
+              <button class="btn btn-secondary" id="exportBtn">Export</button>
+            </div>
+            <div class="data-action">
+              <div class="data-info">
+                <h3>Import Settings</h3>
+                <p>Restore settings from JSON file</p>
+              </div>
+              <button class="btn btn-secondary" id="importBtn">Import</button>
+              <input type="file" id="importFile" accept=".json" hidden>
+            </div>
+            <div class="data-action danger">
+              <div class="data-info">
+                <h3>Reset All Data</h3>
+                <p>Clear all settings, stats, and cache</p>
+              </div>
+              <button class="btn btn-danger" id="resetAllBtn">Reset Everything</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="setting-group">
+          <h2>Diagnostics</h2>
+          <div class="diagnostics-grid">
+            <button class="diag-btn" id="diagWhiteVideoBtn">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="23 7 16 12 23 17 23 7"/>
+                <rect x="1" y="5" width="15" height="14" rx="2"/>
+              </svg>
+              <span>Diagnose White Video</span>
+            </button>
+            <button class="diag-btn" id="diagBlockRateBtn">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="20" x2="18" y2="10"/>
+                <line x1="12" y1="20" x2="12" y2="4"/>
+                <line x1="6" y1="20" x2="6" y2="14"/>
+              </svg>
+              <span>Diagnose Block Rate</span>
+            </button>
+            <button class="diag-btn" id="diagLifecycleBtn">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                <polyline points="22 4 12 14.01 9 11.01"/>
+              </svg>
+              <span>Lifecycle Diagnostics</span>
+            </button>
+            <button class="diag-btn" id="diagHealthBtn">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+              </svg>
+              <span>Health Status</span>
+            </button>
+            <button class="diag-btn" id="runValidationBtn">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                <polyline points="22 4 12 14.01 9 11.01"/>
+              </svg>
+              <span>Run Full Validation</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="setting-group">
+          <h2>System Information</h2>
+          <div class="sys-info" id="sysInfo">
+            <div class="sys-item"><span class="sys-label">Extension Version</span><span class="sys-value" id="sysVersion">5.0.0</span></div>
+            <div class="sys-item"><span class="sys-label">Manifest Version</span><span class="sys-value">V3</span></div>
+            <div class="sys-item"><span class="sys-label">Chrome Version</span><span class="sys-value" id="sysChrome">—</span></div>
+            <div class="sys-item"><span class="sys-label">Platform</span><span class="sys-value" id="sysPlatform">—</span></div>
+            <div class="sys-item"><span class="sys-label">DNR Available</span><span class="sys-value" id="sysDNR">—</span></div>
+            <div class="sys-item"><span class="sys-label">WebRequest Fallback</span><span class="sys-value" id="sysFallback">—</span></div>
+            <div class="sys-item"><span class="sys-label">Memory Usage</span><span class="sys-value" id="sysMemory">—</span></div>
+            <div class="sys-item"><span class="sys-label">Uptime</span><span class="sys-value" id="sysUptime">—</span></div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Custom List Modal -->
+  <dialog class="modal" id="customListModal">
+    <form method="dialog" class="modal-content">
+      <header class="modal-header">
+        <h2>Add Custom Filter List</h2>
+        <button class="modal-close" value="cancel">×</button>
+      </header>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="customListName">Name</label>
+          <input type="text" id="customListName" required placeholder="My Custom List">
+        </div>
+        <div class="form-group">
+          <label for="customListUrl">URL</label>
+          <input type="url" id="customListUrl" required placeholder="https://example.com/list.txt">
+        </div>
+        <div class="form-group">
+          <label for="customListCategory">Category</label>
+          <select id="customListCategory">
+            <option value="custom">Custom</option>
+            <option value="core">Core</option>
+            <option value="annoyances">Annoyances</option>
+            <option value="privacy">Privacy</option>
+            <option value="regional">Regional</option>
+          </select>
+        </div>
+        <p class="form-hint">List must be in Adblock Plus format (.txt)</p>
+      </div>
+      <footer class="modal-footer">
+        <button class="btn btn-secondary" value="cancel">Cancel</button>
+        <button class="btn btn-primary" id="saveCustomListBtn">Add List</button>
+      </footer>
+    </dialog>
+
+  <script src="options.js"></script>
+</body>
+</html>

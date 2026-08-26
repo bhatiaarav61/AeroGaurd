@@ -1,9 +1,9 @@
 // dns-uncloaker.js - Async DNS Uncloaking for Firefox MV3 & Supported Browsers
 // Uses browser.dns API for true asynchronous CNAME resolution
-// When a first-party request occurs, checks if canonical domain maps to an ad network
-// and dynamically updates DNR rules
+// When a first-party request occurs, checks if the canonical domain maps to an ad network
+// and dynamically updates DNR rules.
 
-import { CNAME_TRACKER_TARGETS } from './cname-uncloaker.js';
+import { CNAME_TRACKER_TARGETS } from './cname-uncloaking.js';
 
 if (typeof browser !== 'undefined' && browser.dns) {
   const RESOLVED_CNAME_CACHE = new Set();

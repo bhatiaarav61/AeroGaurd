@@ -1,0 +1,50 @@
+=== Feature Verification ===
+
+1. 200K rules across 20 rulesets:
+   Total rulesets: 20 (expected 20)
+   Total rules processed: 200000 (expected 200000)
+   Static rules (capped at 150K): 150000
+
+2. Dynamic partitioning (adapts to input):
+   Small input (1 rule): 3 rulesets
+
+3. Quota management:
+   Max static rules per partition: 150000
+   Max regex rules per ruleset: 2000
+   Max session rules per ruleset: 5000
+   Reserved dynamic rulesets: 2
+
+4. Strategy by source + priority/action:
+   - Rules grouped by source (easylist, easyprivacy, etc.)
+   - Within source: sorted by priority then action (allow first)
+   - Verified in test output above
+
+5. Load balancing:
+   Static ruleset counts: [ 8334, 8334, 8334, 8334, 8334 ] ... (total: 18 rulesets)
+   Min: 8322 Max: 8334 Avg: 8333
+
+6. Priority distribution (allow in lower IDs):
+   Ruleset 1 (static-1): allow=2 block=0
+   Ruleset 2 (static-2): allow=0 block=2
+
+7. Reserved 2 dynamic rulesets:
+   Dynamic rulesets: [ 'user-custom (id=19)', 'session-rules (id=20)' ]
+
+8. Regex ruleset (max 2000 per ruleset):
+   Regex rulesets created: 3 (expected 3 for 5000 rules at 2000 each)
+    regex-1 :  2000  rules
+    regex-2 :  2000  rules
+    regex-3 :  1000  rules
+
+9. Session ruleset (max 5000 per ruleset):
+   Session rulesets created: 3 (expected 3 for 12000 rules at 5000 each)
+    session-1 :  5000  rules
+    session-2 :  5000  rules
+    session-3 :  2000  rules
+
+10. Validation:
+   - Total rulesets <= 20: PASS
+   - No ID collisions: PASS
+   - Static rules <= 150K: PASS
+   - All rulesets valid structure: PASS
+   - Overall valid: PASS

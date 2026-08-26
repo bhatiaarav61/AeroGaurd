@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Ad Detection Test</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        h1 { color: #333; }
+        .test-section {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .player-container {
+            position: relative;
+            width: 100%;
+            max-width: 854px;
+            aspect-ratio: 16/9;
+            background: #000;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        #player { width: 100%; height: 100%; }
+        .controls { margin-top: 15px; }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            border: none;
+            border-radius: 4px;
+            background: #0066cc;
+            color: white;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        button:hover { background: #0052a3; }
+        button:disabled { background: #ccc; cursor: not-allowed; }
+        .results {
+            margin-top: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 13px;
+            max-height: 300px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+        .log-entry { margin: 5px 0; padding: 5px; border-radius: 3px; }
+        .log-info { background: #e3f2fd; }
+        .log-warn { background: #fff3e0; }
+        .log-error { background: #ffebee; }
+        .log-success { background: #e8f5e9; }
+        .ad-types { display: flex; flex-wrap: wrap; gap: 10px; margin: 15px 0; }
+        .ad-type {
+            padding: 8px 16px;
+            background: #e0e0e0;
+            border-radius: 20px;
+            font-size: 13px;
+            transition: all 0.3s;
+        }
+        .ad-type.detected { background: #ffcdd2; color: #c62828; }
+        .ad-type.clear { background: #c8e6c9; color: #2e7d32; }
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        .status-indicator.playing { background: #4caf50; }
+        .status-indicator.paused { background: #ff9800; }
+        .status-indicator.ended { background: #9e9e9e; }
+        .status-indicator.ad-playing { background: #f44336; animation: pulse 1s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    </style>
+</head>
+<body>
+    <h1>YouTube Ad Detection Test</h1>
+    <p>This test page embeds a YouTube player and detects various ad types.</p>
+
+    <div class="test-section">
+        <h2>Video Player</h2>
+        <div class="player-container">
+            <div id="player"></div>
+        </div>
+        <div class="controls">
+            <button id="loadBtn" onclick="loadVideo()">Load Test Video</button>
+            <button id="playBtn" onclick="playVideo()" disabled>Play</button>
+            <button id="pauseBtn" onclick="pauseVideo()" disabled>Pause</button>
+            <button id="seekMidBtn" onclick="seekToMidroll()" disabled>Seek to Mid-roll</button>
+            <button id="detectBtn" onclick="detectAds()">Detect Ads Now</button>
+            <button id="clearBtn" onclick="clearLogs()">Clear Logs</button>
+        </div>
+        <div id="playerStatus">Player status: <span class="status-indicator" id="statusDot"></span><span id="statusText">Not loaded</span></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Ad Type Detection</h2>
+        <div class="ad-types" id="adTypes">
+            <span class="ad-type" data-type="preroll">Pre-roll</span>
+            <span class="ad-type" data-type="midroll">Mid-roll</span>
+            <span class="ad-type" data-type="overlay">Overlay</span>
+            <span class="ad-type" data-type="banner">Banner</span>
+            <span class="ad-type" data-type="sponsored">Sponsored</span>
+            <span class="ad-type" data-type="shorts">Shorts Ads</span>
+            <span class="ad-type" data-type="bumper">Bumper</span>
+            <span class="ad-type" data-type="postroll">Post-roll</span>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>Detection Results</h2>
+        <div class="results" id="results"></div>
+    </div>
+
+    <script src="https://www.youtube.com/iframe_api"></script>
+    <script>
+        let player;
+        let adCheckInterval;
+        const TEST_VIDEO_ID = 'dQw4w9WgXcQ'; // Rick Roll - known to have ads
+        // Alternative test videos with ads:
+        // 'jNQXAC9IVRw' - Me at the zoo (first YT video, may have ads)
+        // '9bZkp7q19f0' - Gangnam Style (heavy ads)
+
+        function log(message, type = 'info') {
+            const results = document.getElementById('results');
+            const entry = document.createElement('div');
+            entry.className = `log-entry log-${type}`;
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            results.insertBefore(entry, results.firstChild);
+        }
+
+        function updateStatus(text, className = '') {
+            document.getElementById('statusText').textContent = text;
+            const dot = document.getElementById('statusDot');
+            dot.className = `status-indicator ${className}`;
+        }
+
+        function setAdTypeDetected(type, detected) {
+            const el = document.querySelector(`.ad-type[data-type="${type}"]`);
+            if (el) {
+                el.classList.toggle('detected', detected);
+                el.classList.toggle('clear', !detected);
+            }
+        }
+
+        function clearLogs() {
+            document.getElementById('results').innerHTML = '';
+        }
+
+        function onYouTubeIframeAPIReady() {
+            player = new YT.Player('player', {
+                height: '480',
+                width: '854',
+                videoId: TEST_VIDEO_ID,
+                playerVars: {
+                    'autoplay': 0,
+                    'controls': 1,
+                    'rel': 0,
+                    'modestbranding': 1,
+                    'playsinline': 1,
+                    'enablejsapi': 1
+                },
+                events: {
+                    'onReady': onPlayerReady,
+                    'onStateChange': onPlayerStateChange,
+                    'onError': onPlayerError
+                }
+            });
+        }
+
+        function onPlayerReady(event) {
+            log('Player ready', 'success');
+            updateStatus('Ready', 'paused');
+            document.getElementById('playBtn').disabled = false;
+            document.getElementById('loadBtn').disabled = true;
+            document.getElementById('detectBtn').disabled = false;
+            startAdDetection();
+        }
+
+        function onPlayerStateChange(event) {
+            const states = {
+                -1: 'unstarted',
+                0: 'ended',
+                1: 'playing',
+                2: 'paused',
+                3: 'buffering',
+                5: 'cued'
+            };
+            const state = states[event.data] || 'unknown';
+            log(`Player state: ${state}`, state === 'playing' ? 'success' : 'info');
+            updateStatus(state.charAt(0).toUpperCase() + state.slice(1), state);
+
+            if (event.data === YT.PlayerState.PLAYING) {
+                document.getElementById('playBtn').disabled = true;
+                document.getElementById('pauseBtn').disabled = false;
+                document.getElementById('seekMidBtn').disabled = false;
+            } else if (event.data === YT.PlayerState.PAUSED) {
+                document.getElementById('playBtn').disabled = false;
+                document.getElementById('pauseBtn').disabled = true;
+            } else if (event.data === YT.PlayerState.ENDED) {
+                document.getElementById('playBtn').disabled = false;
+                document.getElementById('pauseBtn').disabled = true;
+                document.getElementById('seekMidBtn').disabled = true;
+            }
+        }
+
+        function onPlayerError(event) {
+            log(`Player error: ${event.data}`, 'error');
+        }
+
+        function loadVideo() {
+            if (player) {
+                player.loadVideoById(TEST_VIDEO_ID);
+            } else {
+                onYouTubeIframeAPIReady();
+            }
+        }
+
+        function playVideo() { if (player) player.playVideo(); }
+        function pauseVideo() { if (player) player.pauseVideo(); }
+        function seekToMidroll() { if (player) player.seekTo(player.getDuration() * 0.5, true); }
+
+        // ========== AD DETECTION LOGIC ==========
+
+        function startAdDetection() {
+            if (adCheckInterval) clearInterval(adCheckInterval);
+            adCheckInterval = setInterval(detectAds, 1000);
+            log('Ad detection started (checking every 1s)', 'info');
+        }
+
+        function stopAdDetection() {
+            if (adCheckInterval) clearInterval(adCheckInterval);
+            adCheckInterval = null;
+        }
+
+        function detectAds() {
+            if (!player || !document.getElementById('player').contentDocument) return;
+
+            const doc = document.getElementById('player').contentDocument ||
+                       document.getElementById('player').contentWindow?.document;
+            if (!doc) {
+                // Try alternative access
+                detectAdsFromParent();
+                return;
+            }
+
+            const findings = [];
+
+            // 1. Check for ytp-ad-module (main ad container)
+            const adModule = doc.querySelector('.ytp-ad-module, .ytp-ad-player-overlay, .ytp-ad-overlay-container');
+            if (adModule) {
+                findings.push('Found ytp-ad-module / ad overlay container');
+                setAdTypeDetected('preroll', true);
+                setAdTypeDetected('midroll', true);
+            }
+
+            // 2. Check for video-ads (ad video element)
+            const videoAds = doc.querySelectorAll('video.ytp-ad-video, .video-ads video, .ytp-ad-player video');
+            if (videoAds.length > 0) {
+                findings.push(`Found ${videoAds.length} video ad element(s)`);
+                setAdTypeDetected('preroll', true);
+                setAdTypeDetected('midroll', true);
+            }
+
+            // 3. Check for pre-roll specific
+            const preroll = doc.querySelector('.ytp-ad-preroll, .ytp-ad-skip-button-container');
+            if (preroll) {
+                findings.push('Pre-roll ad detected');
+                setAdTypeDetected('preroll', true);
+            }
+
+            // 4. Check for mid-roll specific
+            const midroll = doc.querySelector('.ytp-ad-midroll, [class*="midroll"]');
+            if (midroll) {
+                findings.push('Mid-roll ad detected');
+                setAdTypeDetected('midroll', true);
+            }
+
+            // 5. Check for overlay ads (bottom banner)
+            const overlay = doc.querySelector('.ytp-overlay-ad-container, .ytp-ad-overlay, .ytp-ad-image-overlay');
+            if (overlay) {
+                findings.push('Overlay ad detected');
+                setAdTypeDetected('overlay', true);
+            }
+
+            // 6. Check for banner/companion ads
+            const banner = doc.querySelector('.ytp-ad-companion, .ytp-ad-banner, [class*="companion"]');
+            if (banner) {
+                findings.push('Banner/companion ad detected');
+                setAdTypeDetected('banner', true);
+            }
+
+            // 7. Check for sponsored content
+            const sponsored = doc.querySelector('[class*="sponsored"], [class*="promoted"], .ytp-ad-sponsored');
+            if (sponsored) {
+                findings.push('Sponsored content detected');
+                setAdTypeDetected('sponsored', true);
+            }
+
+            // 8. Check for Shorts ads
+            const shortsAd = doc.querySelector('.reel-player-ad, .shorts-ad, [class*="shorts"][class*="ad"]');
+            if (shortsAd) {
+                findings.push('Shorts ad detected');
+                setAdTypeDetected('shorts', true);
+            }
+
+            // 9. Check for bumper ads (non-skippable short ads)
+            const bumper = doc.querySelector('.ytp-ad-bumper, [class*="bumper"]');
+            if (bumper) {
+                findings.push('Bumper ad detected');
+                setAdTypeDetected('bumper', true);
+            }
+
+            // 10. Check for post-roll
+            const postroll = doc.querySelector('.ytp-ad-postroll, [class*="postroll"]');
+            if (postroll) {
+                findings.push('Post-roll ad detected');
+                setAdTypeDetected('postroll', true);
+            }
+
+            // 11. Check for ad skip button (indicates skippable ad playing)
+            const skipBtn = doc.querySelector('.ytp-ad-skip-button, .ytp-ad-skip-button-modern');
+            if (skipBtn && skipBtn.offsetParent !== null) {
+                findings.push('Skip button visible - skippable ad playing');
+                updateStatus('Ad Playing (skippable)', 'ad-playing');
+            }
+
+            // 12. Check for ad progress bar
+            const adProgress = doc.querySelector('.ytp-ad-progress, .ytp-ad-progress-bar');
+            if (adProgress) {
+                findings.push('Ad progress bar found');
+            }
+
+            // 13. Check player's internal ad state via getPlayerState
+            try {
+                const playerState = player.getPlayerState();
+                if (playerState === -1 || playerState === 5) {
+                    // Check if we're in an ad by looking at video data
+                    const videoData = player.getVideoData();
+                    if (videoData && videoData.isAd) {
+                        findings.push('Player reports ad video data');
+                    }
+                }
+            } catch (e) {
+                // Cross-origin restrictions may block this
+            }
+
+            // 14. Check for ad-related network requests (via performance API)
+            try {
+                const entries = performance.getEntriesByType('resource');
+                const adRequests = entries.filter(e =>
+                    e.name.includes('googlevideo.com/videoplayback') &&
+                    (e.name.includes('adformat') || e.name.includes('ptchn') || e.name.includes('ad_'))
+                );
+                if (adRequests.length > 0) {
+                    findings.push(`Detected ${adRequests.length} ad-related network request(s)`);
+                }
+            } catch (e) {}
+
+            if (findings.length > 0) {
+                findings.forEach(f => log(f, 'warn'));
+                updateStatus('Ad Detected', 'ad-playing');
+            } else {
+                // Only log clear status occasionally to avoid spam
+                if (Math.random() < 0.1) {
+                    log('No ads currently detected', 'success');
+                }
+            }
+
+            return findings;
+        }
+
+        // Fallback detection from parent window (limited due to CORS)
+        function detectAdsFromParent() {
+            const findings = [];
+            const iframe = document.getElementById('player');
+
+            // Check for known ad indicators in parent-accessible attributes
+            try {
+                // Some ad info may be in the iframe's title or aria attributes
+                if (iframe.title && iframe.title.toLowerCase().includes('ad')) {
+                    findings.push('Iframe title indicates ad');
+                }
+            } catch (e) {}
+
+            if (findings.length > 0) {
+                findings.forEach(f => log(f, 'warn'));
+            }
+        }
+
+        // Advanced: Try to access player's internal ad info
+        function getPlayerAdInfo() {
+            try {
+                // These methods may not be exposed but worth trying
+                if (player.getAdState) {
+                    const adState = player.getAdState();
+                    log(`Player ad state: ${adState}`, 'info');
+                }
+                if (player.getAdSlot) {
+                    const adSlot = player.getAdSlot();
+                    log(`Player ad slot: ${adSlot}`, 'info');
+                }
+            } catch (e) {
+                // Expected - methods not exposed
+            }
+        }
+
+        // Manual detection trigger
+        window.detectAds = detectAds;
+
+        // Cleanup on unload
+        window.addEventListener('beforeunload', () => {
+            stopAdDetection();
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' && document.activeElement === document.body) {
+                e.preventDefault();
+                if (player) {
+                    const state = player.getPlayerState();
+                    if (state === YT.PlayerState.PLAYING) player.pauseVideo();
+                    else player.playVideo();
+                }
+            }
+            if (e.key === 'd' || e.key === 'D') detectAds();
+        });
+
+        log('Test page loaded. Click "Load Test Video" to begin.', 'info');
+    </script>
+</body>
+</html>

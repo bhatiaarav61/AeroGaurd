@@ -1,4 +1,4 @@
-// Injected into MAIN world at document_start
+// content/defuser-main.js — Main-world anti-adblock defuser (runs at document_start in MAIN world)
 (() => {
   'use strict';
 
@@ -22,4 +22,21 @@
   window.amplitude = window.amplitude || { init: noop, logEvent: noop };
   window.mixpanel = window.mixpanel || { init: noop, track: noop };
   window.Sentry = window.Sentry || { init: noop, captureException: noop };
+
+  // YouTube-specific anti-adblock defusers
+  window.yt = window.yt || {};
+  window.yt.config_ = window.yt.config_ || {};
+  window.yt.config_.EXPERIMENT_FLAGS = window.yt.config_.EXPERIMENT_FLAGS || {};
+
+  // Block YouTube ad detection
+  if (window.yt && window.yt.config_) {
+    window.yt.config_.AD_PREROLL = false;
+    window.yt.config_.AD_MIDROLL = false;
+    window.yt.config_.AD_POSTROLL = false;
+    window.yt.config_.EXPERIMENT_FLAGS.ad_placements_on_player_controls = false;
+  }
+  window.ytInitialPlayerResponse = window.ytInitialPlayerResponse || {};
+  if (window.ytInitialPlayerResponse) {
+    window.ytInitialPlayerResponse.adPlacements = [];
+  }
 })();
