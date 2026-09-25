@@ -1,71 +1,339 @@
 {
   "manifest_version": 3,
-  "name": "AeroGuard Pro",
-  "version": "2.0.0",
-  "description": "Production-grade ad blocker with YouTube-specific protection",
+  "name": "__MSG_extensionName__",
+  "version": "3.0.0",
+  "description": "__MSG_extensionDescription__",
   "default_locale": "en",
   "permissions": [
     "declarativeNetRequest",
-    "declarativeNetRequestWithHostAccess",
     "declarativeNetRequestFeedback",
+    "declarativeNetRequestWithHostAccess",
     "storage",
-    "scripting",
+    "unlimitedStorage",
     "tabs",
+    "scripting",
     "webNavigation",
-    "alarms"
+    "alarms",
+    "notifications",
+    "cookies"
   ],
-  "host_permissions": ["<all_urls>"],
+  "host_permissions": [
+    "<all_urls>"
+  ],
   "background": {
-    "service_worker": "background.js",
+    "service_worker": "background/service-worker.js",
     "type": "module"
   },
   "action": {
     "default_popup": "popup/popup.html",
-    "default_title": "AeroGuard Pro"
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "32": "icons/icon-32.png",
+      "48": "icons/icon-48.png",
+      "128": "icons/icon-128.png"
+    },
+    "default_title": "__MSG_extensionName__"
   },
   "options_page": "options/options.html",
-  "incognito": "split",
   "icons": {
     "16": "icons/icon-16.png",
     "32": "icons/icon-32.png",
     "48": "icons/icon-48.png",
     "128": "icons/icon-128.png"
   },
-  "declarative_net_request": {
-    "rule_resources": [
-      { "id": "ruleset_dynamic", "enabled": true, "path": "rules/dynamic.json" }
-    ],
-    "max_number_of_enabled_rulesets": 1,
-    "max_number_of_static_rules": 5000,
-    "max_number_of_dynamic_rules": 30000,
-    "max_number_of_session_rules": 5000,
-    "max_number_of_regex_rules": 100
-  },
   "content_scripts": [
     {
-      "matches": ["*://*.youtube.com/*", "*://*.youtube-nocookie.com/*"],
-      "js": ["content/yt.js"],
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "content-scripts/content-script.js"
+      ],
+      "css": [
+        "content-scripts/content-script.css"
+      ],
       "run_at": "document_start",
-      "world": "MAIN",
-      "all_frames": true,
-      "match_about_blank": true
+      "all_frames": true
     },
     {
-      "matches": ["<all_urls>"],
-      "exclude_matches": ["*://*.youtube.com/*", "*://*.youtube-nocookie.com/*"],
-      "js": ["content/generic.js"],
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "content-scripts/element-hider.js"
+      ],
       "run_at": "document_start",
-      "world": "MAIN",
-      "all_frames": true,
-      "match_about_blank": true
+      "all_frames": true
+    },
+    {
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "content-scripts/cosmetic-filter-engine.js"
+      ],
+      "run_at": "document_start",
+      "all_frames": true
     }
   ],
-  "web_accessible_resources": [{
-    "resources": ["scriptlets/*.js"],
-    "matches": ["<all_urls>"],
-    "use_dynamic_url": true
-  }],
+  "declarative_net_request": {
+    "rule_resources": [
+      {
+        "id": "ruleset_1",
+        "enabled": true,
+        "path": "rules/block-rules.json"
+      },
+      {
+        "id": "ruleset_2",
+        "enabled": true,
+        "path": "rules/allow-rules.json"
+      },
+      {
+        "id": "ruleset_3",
+        "enabled": true,
+        "path": "rules/custom-rules.json"
+      },
+      {
+        "id": "ruleset_easylist",
+        "enabled": true,
+        "path": "rules/easylist.json"
+      },
+      {
+        "id": "ruleset_easyprivacy",
+        "enabled": true,
+        "path": "rules/easyprivacy.json"
+      },
+      {
+        "id": "ruleset_easylist_cookie",
+        "enabled": true,
+        "path": "rules/easylist_cookie.json"
+      },
+      {
+        "id": "ruleset_peterlowe",
+        "enabled": true,
+        "path": "rules/peterlowe.json"
+      },
+      {
+        "id": "ruleset_oisd",
+        "enabled": true,
+        "path": "rules/oisd.json"
+      },
+      {
+        "id": "ruleset_ublock_filters",
+        "enabled": true,
+        "path": "rules/ublock_filters.json"
+      },
+      {
+        "id": "ruleset_ublock_badware",
+        "enabled": true,
+        "path": "rules/ublock_badware.json"
+      },
+      {
+        "id": "ruleset_ublock_privacy",
+        "enabled": true,
+        "path": "rules/ublock_privacy.json"
+      },
+      {
+        "id": "ruleset_ublock_resource_abuse",
+        "enabled": true,
+        "path": "rules/ublock_resource_abuse.json"
+      },
+      {
+        "id": "ruleset_ublock_unbreak",
+        "enabled": true,
+        "path": "rules/ublock_unbreak.json"
+      },
+      {
+        "id": "ruleset_fanboy_annoyances",
+        "enabled": true,
+        "path": "rules/fanboy_annoyances.json"
+      },
+      {
+        "id": "ruleset_fanboy_social",
+        "enabled": true,
+        "path": "rules/fanboy_social.json"
+      },
+      {
+        "id": "ruleset_easylist_germany",
+        "enabled": true,
+        "path": "rules/easylist_germany.json"
+      },
+      {
+        "id": "ruleset_easylist_france",
+        "enabled": true,
+        "path": "rules/easylist_france.json"
+      },
+      {
+        "id": "ruleset_easylist_china",
+        "enabled": true,
+        "path": "rules/easylist_china.json"
+      },
+      {
+        "id": "ruleset_easylist_italy",
+        "enabled": true,
+        "path": "rules/easylist_italy.json"
+      },
+      {
+        "id": "ruleset_easylist_lithuania",
+        "enabled": true,
+        "path": "rules/easylist_lithuania.json"
+      },
+      {
+        "id": "ruleset_easylist_poland",
+        "enabled": true,
+        "path": "rules/easylist_poland.json"
+      },
+      {
+        "id": "ruleset_easylist_spanish",
+        "enabled": true,
+        "path": "rules/easylist_spanish.json"
+      },
+      {
+        "id": "ruleset_easylist_bulgaria",
+        "enabled": true,
+        "path": "rules/easylist_bulgaria.json"
+      },
+      {
+        "id": "ruleset_easylist_czech",
+        "enabled": true,
+        "path": "rules/easylist_czech.json"
+      },
+      {
+        "id": "ruleset_easylist_denmark",
+        "enabled": true,
+        "path": "rules/easylist_denmark.json"
+      },
+      {
+        "id": "ruleset_easylist_greece",
+        "enabled": true,
+        "path": "rules/easylist_greece.json"
+      },
+      {
+        "id": "ruleset_easylist_hungary",
+        "enabled": true,
+        "path": "rules/easylist_hungary.json"
+      },
+      {
+        "id": "ruleset_easylist_israel",
+        "enabled": true,
+        "path": "rules/easylist_israel.json"
+      },
+      {
+        "id": "ruleset_easylist_latvia",
+        "enabled": true,
+        "path": "rules/easylist_latvia.json"
+      },
+      {
+        "id": "ruleset_easylist_netherlands",
+        "enabled": true,
+        "path": "rules/easylist_netherlands.json"
+      },
+      {
+        "id": "ruleset_easylist_portugal",
+        "enabled": true,
+        "path": "rules/easylist_portugal.json"
+      },
+      {
+        "id": "ruleset_easylist_romania",
+        "enabled": true,
+        "path": "rules/easylist_romania.json"
+      },
+      {
+        "id": "ruleset_easylist_serbia",
+        "enabled": true,
+        "path": "rules/easylist_serbia.json"
+      },
+      {
+        "id": "ruleset_easylist_slovakia",
+        "enabled": true,
+        "path": "rules/easylist_slovakia.json"
+      },
+      {
+        "id": "ruleset_easylist_sweden",
+        "enabled": true,
+        "path": "rules/easylist_sweden.json"
+      },
+      {
+        "id": "ruleset_easylist_turkey",
+        "enabled": true,
+        "path": "rules/easylist_turkey.json"
+      },
+      {
+        "id": "ruleset_nocoin",
+        "enabled": true,
+        "path": "rules/nocoin.json"
+      },
+      {
+        "id": "ruleset_adguard_dns",
+        "enabled": true,
+        "path": "rules/adguard_dns.json"
+      },
+      {
+        "id": "ruleset_adguard_mobile_dns",
+        "enabled": true,
+        "path": "rules/adguard_mobile_dns.json"
+      },
+      {
+        "id": "ruleset_adguard_base",
+        "enabled": true,
+        "path": "rules/adguard_base.json"
+      },
+      {
+        "id": "ruleset_adguard_mobile",
+        "enabled": true,
+        "path": "rules/adguard_mobile.json"
+      },
+      {
+        "id": "ruleset_adguard_tracking",
+        "enabled": true,
+        "path": "rules/adguard_tracking.json"
+      },
+      {
+        "id": "ruleset_adguard_annoyances",
+        "enabled": true,
+        "path": "rules/adguard_annoyances.json"
+      },
+      {
+        "id": "ruleset_adguard_social",
+        "enabled": true,
+        "path": "rules/adguard_social.json"
+      }
+    ]
+  },
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "icons/icon-48.png"
+      ],
+      "matches": [
+        "<all_urls>"
+      ]
+    }
+  ],
+  "commands": {
+    "toggle-extension": {
+      "suggested_key": {
+        "default": "Alt+Shift+A",
+        "mac": "Alt+Shift+A"
+      },
+      "description": "Toggle ad blocker on/off"
+    },
+    "open-options": {
+      "suggested_key": {
+        "default": "Alt+Shift+O",
+        "mac": "Alt+Shift+O"
+      },
+      "description": "Open options page"
+    }
+  },
+  "minimum_chrome_version": "88",
+  "incognito": "spanning",
   "content_security_policy": {
     "extension_pages": "script-src 'self'; object-src 'self';"
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "aeroguard@aeroguard.io"
+    }
   }
 }
