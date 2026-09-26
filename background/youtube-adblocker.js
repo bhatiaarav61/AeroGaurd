@@ -202,7 +202,7 @@ class YouTubeAdBlocker {
             if (m.type === 'childList' && m.addedNodes.length) {
               for (const n of m.addedNodes) {
                 if (n.nodeType === 1 && (n.matches?.('.video-ads, .ytp-ad-module, .ytp-ad-player-overlay, .ad-interrupting, .html5-ad-space, .ytp-ad-player-overlay, .ytp-ad-module, ytd-ad-slot-renderer') || n.querySelector?.('ytd-ad-slot-renderer, .ytp-ad-module, .video-ads, .ad-showing'))) {
-                  if (document.querySelector('.ad-interrupting, .html5-ad-space, .ytp-ad-player-overlay, .ytp-ad-module')) {
+                  if (document.querySelector('.html5-video-player.ad-showing, .ytp-ad-player-overlay-layout')) {
                     const video = document.querySelector('video.html5-main-video, video#movie_player, video');
                     if (video) { video.muted = true; video.playbackRate = 16.0; if (isFinite(video.duration) && video.duration > 0) video.currentTime = video.duration - 0.1; }
                     const skipBtn = document.querySelector('.ytp-ad-skip-button, .ytp-ad-skip-button-modern, .ytp-skip-ad-button');

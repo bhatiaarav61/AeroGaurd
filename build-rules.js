@@ -350,6 +350,22 @@ function buildShards(texts) {
     }
   }
 
+  // Curated scriptlets that filter lists ship as set-constant (unsafe to
+  // compile) - expressed as the safe uBOL-style json-prune instead. Without
+  // this, YouTube serves in-player ads inside the allowed player response.
+  const CURATED_SCRIPTLETS = {
+    'youtube.com': [['json-prune', ['playerResponse.adPlacements playerResponse.playerAds playerResponse.adSlots adPlacements playerAds adSlots']]],
+    'www.youtube.com': [['json-prune', ['playerResponse.adPlacements playerResponse.playerAds playerResponse.adSlots adPlacements playerAds adSlots']]]
+  };
+  for (const [domain, calls] of Object.entries(CURATED_SCRIPTLETS)) {
+    scriptlets.domains[domain] = scriptlets.domains[domain] || [];
+    for (const call of calls) {
+      if (!scriptlets.domains[domain].some((e) => JSON.stringify(e) === JSON.stringify(call))) {
+        scriptlets.domains[domain].push(call);
+      }
+    }
+  }
+
   fs.rmSync(COSMETIC_DIR, { recursive: true, force: true });
   fs.rmSync(SCRIPTLET_DIR, { recursive: true, force: true });
   writeJson(path.join(COSMETIC_DIR, 'generic.json'), {

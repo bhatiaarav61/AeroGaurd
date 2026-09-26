@@ -207,12 +207,8 @@ class ElementHider {
       "ytd-promoted-sparkles-web-renderer", 
       "ytd-ad-slot-renderer",
       "ytd-rich-ad-slot-renderer",
-      ".ytp-ad-module",
-      ".ytp-ad-player-overlay",
       ".ytp-ad-preview-container",
       ".ytp-ad-skip-button-container",
-      ".video-ads",
-      ".ad-showing",
       ".ytp-ad-text",
       ".ytp-ad-preview-thumbnail",
       ".ytp-ad-branding",
@@ -247,7 +243,8 @@ class ElementHider {
   autoSkipYouTubeAds() {
     const video = document.querySelector("video.html5-main-video") || document.querySelector("video");
     if (video) {
-      const adShowing = document.querySelector(".ad-showing") || document.querySelector(".ytp-ad-module");
+      // Only the player-root ad-showing class is a true "ad playing" state.
+    const adShowing = document.querySelector(".html5-video-player.ad-showing");
       if (adShowing) {
         video.muted = true;
         if (video.currentTime < video.duration - 1) {

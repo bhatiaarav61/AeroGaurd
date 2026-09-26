@@ -96,7 +96,10 @@ class ContentScript {
   blockYouTubeAds() {
     // Block video ad overlay elements
     const video = document.querySelector("video.html5-main-video") || document.querySelector("video");
-    const adShowing = document.querySelector(".ad-showing") || document.querySelector(".ytp-ad-module");
+    // .ytp-ad-module is a PERSISTENT container (exists without ads) - using it as
+    // the ad signal seeked the REAL video to its end. Only .ad-showing on the
+    // player root is a true "ad playing" state.
+    const adShowing = document.querySelector(".html5-video-player.ad-showing");
     
     if (adShowing && video) {
       // Mute the ad
@@ -142,13 +145,9 @@ class ContentScript {
       "ytd-promoted-video-renderer",
       
       // Player overlays
-      ".ytp-ad-module",
-      ".ytp-ad-player-overlay",
       ".ytp-ad-player-overlay-instream",
       ".ytp-ad-preview-container",
       ".ytp-ad-skip-button-container",
-      ".video-ads",
-      ".ad-showing",
       ".ytp-ad-text",
       ".ytp-ad-preview-thumbnail",
       ".ytp-ad-branding",
