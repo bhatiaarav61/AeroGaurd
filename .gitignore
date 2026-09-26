@@ -1,0 +1,9 @@
+_metadata/ 
+tests/e2e/browsers/ 
+tests/e2e/profile/ 
+tests/e2e/profile2/ 
+tests/e2e/profile3/ 
+tests/e2e/profile4/ 
+tests/e2e/profile-ab-*/ 
+tests/e2e/profile-bisect/ 
+tests/e2e/profile-watch/

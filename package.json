@@ -20,5 +20,9 @@
     "privacy"
   ],
   "author": "AeroGuard Team",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "@puppeteer/browsers": "^3.2.3",
+    "puppeteer-core": "^23.11.1"
+  }
 }

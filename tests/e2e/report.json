@@ -1,0 +1,218 @@
+{
+ "extension": {
+  "loaded": true,
+  "id": "nbllhgpinghdmkhokdokgkiajihebekn",
+  "swFound": true,
+  "version": "3.1.0",
+  "enabledRulesets": [
+   "ruleset_block-rules",
+   "ruleset_custom",
+   "ruleset_tracking-params",
+   "ruleset_youtube_ads",
+   "ruleset_adblock-rules",
+   "ruleset_adguard_annoyances",
+   "ruleset_adguard_base",
+   "ruleset_adguard_dns",
+   "ruleset_adguard_mobile",
+   "ruleset_adguard_social",
+   "ruleset_adguard_tracking",
+   "ruleset_annoyances_plus",
+   "ruleset_cname-uncloaking",
+   "ruleset_easylist_bulgaria",
+   "ruleset_easylist_china",
+   "ruleset_easylist_czech",
+   "ruleset_easylist_denmark",
+   "ruleset_easylist_france",
+   "ruleset_easylist_germany",
+   "ruleset_easylist_greece",
+   "ruleset_easylist_hungary",
+   "ruleset_easylist_india",
+   "ruleset_easylist_israel",
+   "ruleset_easylist_italy",
+   "ruleset_easylist_japan",
+   "ruleset_easylist_korea",
+   "ruleset_easylist_latvia",
+   "ruleset_easylist_lithuania",
+   "ruleset_easylist_netherlands",
+   "ruleset_easylist_poland",
+   "ruleset_easylist_portugal",
+   "ruleset_easylist_romania",
+   "ruleset_easylist_russia",
+   "ruleset_easylist_serbia",
+   "ruleset_easylist_spanish",
+   "ruleset_easylist_sweden",
+   "ruleset_easylist_turkey",
+   "ruleset_easylist_vietnam",
+   "ruleset_easylist",
+   "ruleset_easyprivacy",
+   "ruleset_fanboy_annoyances",
+   "ruleset_fanboy_social",
+   "ruleset_nocoin",
+   "ruleset_oisd",
+   "ruleset_peterlowe",
+   "ruleset_ublock_badware",
+   "ruleset_ublock_filters",
+   "ruleset_ublock_privacy",
+   "ruleset_ublock_resource_abuse",
+   "ruleset_ublock_unbreak"
+  ],
+  "dynamicRules": 109
+ },
+ "testPage": {
+  "results": {
+   "images": [
+    {
+     "id": "l1",
+     "ok": true,
+     "w": 1
+    },
+    {
+     "id": "l2",
+     "ok": true,
+     "w": 1
+    },
+    {
+     "id": "l3",
+     "ok": true,
+     "w": 1
+    },
+    {
+     "id": "r2",
+     "ok": true,
+     "w": 544
+    },
+    {
+     "id": "ad1",
+     "ok": false,
+     "w": 0
+    },
+    {
+     "id": "r3",
+     "ok": true,
+     "w": 200
+    },
+    {
+     "id": "r1",
+     "ok": true,
+     "w": 800
+    }
+   ],
+   "videos": [
+    {
+     "id": "v1",
+     "ok": true
+    }
+   ],
+   "adsBlocked": {},
+   "scripts": {
+    "local": true,
+    "jquery": true
+   },
+   "ready": true
+  },
+  "consoleErrors": [
+   "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT",
+   "Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "blockedRequests": [
+   {
+    "url": "https://pagead2.googlesyndication.com/pagead/ads",
+    "err": "net::ERR_BLOCKED_BY_CLIENT"
+   },
+   {
+    "url": "https://www.google-analytics.com/collect?v=1&t=pageview&tid=UA-E2E-TEST",
+    "err": "net::ERR_BLOCKED_BY_CLIENT"
+   },
+   {
+    "url": "https://www.w3schools.com/html/mov_bbb.mp4",
+    "err": "net::ERR_ABORTED"
+   },
+   {
+    "url": "https://www.w3schools.com/html/mov_bbb.mp4",
+    "err": "net::ERR_ABORTED"
+   }
+  ]
+ },
+ "sites": {
+  "google": {
+   "mainFrameOk": true,
+   "finalUrl": "https://www.google.com/",
+   "evalResult": {
+    "title": "Google",
+    "imgsLoaded": 0,
+    "imgsTotal": 6,
+    "searchBox": true,
+    "bodyTextLen": 187
+   },
+   "consoleErrors": [
+    "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT",
+    "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT",
+    "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT",
+    "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT",
+    "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT",
+    "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT"
+   ],
+   "blockedByClient": [
+    {
+     "url": "https://www.google.com/gen_204?s=webhp&t=aft&atyp=csi&ei=k5S3as1aiKzj4Q-s84-xCg&rt=wsrt.222,hst.31,p",
+     "err": "net::ERR_BLOCKED_BY_CLIENT"
+    },
+    {
+     "url": "https://ogads-pa.clients6.google.com/$rpc/google.internal.onegoogle.asyncdata.v1.AsyncDataService/Ge",
+     "err": "net::ERR_BLOCKED_BY_CLIENT"
+    },
+    {
+     "url": "https://www.google.com/gen_204?s=async&astyp=hpba&t=all&atyp=csi&ei=k5S3aq3iFYSu4-EP2NWroAg&rt=ipf.5",
+     "err": "net::ERR_BLOCKED_BY_CLIENT"
+    },
+    {
+     "url": "https://www.google.com/gen_204?atyp=csi&ei=k5S3as1aiKzj4Q-s84-xCg&s=webhp&t=all&folr=_k5S3as1aiKzj4Q",
+     "err": "net::ERR_BLOCKED_BY_CLIENT"
+    },
+    {
+     "url": "https://www.google.com/gen_204?atyp=i&ct=psnt&cad=&nt=navigate&ei=k5S3as1aiKzj4Q-s84-xCg&zx=17904160",
+     "err": "net::ERR_BLOCKED_BY_CLIENT"
+    },
+    {
+     "url": "https://play.google.com/log?format=json&hasfast=true",
+     "err": "net::ERR_BLOCKED_BY_CLIENT"
+    },
+    {
+     "url": "https://www.google.com/gen_204?atyp=i&ei=k5S3as1aiKzj4Q-s84-xCg&dt19=2&prm23=0&zx=1790416020147&opi=",
+     "err": "net::ERR_BLOCKED_BY_CLIENT"
+    },
+    {
+     "url": "https://www.google.com/gen_204?atyp=csi&ei=k5S3as1aiKzj4Q-s84-xCg&s=promo&rt=hpbas.2003&zx=179041602",
+     "err": "net::ERR_BLOCKED_BY_CLIENT"
+    }
+   ]
+  },
+  "wikipedia": {
+   "mainFrameOk": true,
+   "finalUrl": "https://en.wikipedia.org/wiki/Video",
+   "evalResult": {
+    "title": "Video - Wikipedia",
+    "imgsLoaded": 5,
+    "imgsTotal": 17,
+    "bodyTextLen": 31920
+   },
+   "consoleErrors": [],
+   "blockedByClient": []
+  },
+  "youtube": {
+   "mainFrameOk": true,
+   "finalUrl": "https://www.youtube.com/",
+   "evalResult": {
+    "title": "YouTube",
+    "isConsentWall": false,
+    "imgsLoaded": 0,
+    "imgsTotal": 0,
+    "hasApp": true,
+    "gridItems": 0,
+    "bodyTextLen": 0
+   },
+   "consoleErrors": [],
+   "blockedByClient": []
+  }
+ }
+}

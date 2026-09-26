@@ -22,12 +22,41 @@ class CosmeticFilterEngine {
     console.log("[CosmeticFilterEngine] Initialized");
   }
 
+  // uBO-style selectors arrive as bare CSS ("#ad", ".ads"); legacy UI entries
+  // arrive as ABP text ("##...", "domain##..."). Both are accepted.
+  normalizeFilter(raw) {
+    if (typeof raw !== 'string') return null;
+    let text = raw.trim();
+    if (!text) return null;
+    if (text.startsWith('#@#')) return { kind: 'except', selector: text.slice(3).trim(), domains: [] };
+    if (text.startsWith('##')) return { kind: 'hide', selector: text.slice(2).trim(), domains: [] };
+    const idx = text.indexOf('##');
+    if (idx > 0) {
+      const domains = text.slice(0, idx).split(',').map(d => d.trim().replace(/^~?www\./, '')).filter(Boolean);
+      const selector = text.slice(idx + 2).trim();
+      if (!selector) return null;
+      return { kind: 'hide', selector, domains };
+    }
+    if (text.startsWith('#') || text.startsWith('.') || text.startsWith('[')) {
+      return { kind: 'hide', selector: text, domains: [] };
+    }
+    return null;
+  }
+
   async loadFilters() {
     try {
       const response = await chrome.runtime.sendMessage({ type: "GET_COSMETIC_FILTERS" });
       if (response && response.filters) {
-        this.filters = response.filters.filter(f => f.enabled && f.filter.startsWith("##"));
-        this.exceptionFilters = response.filters.filter(f => f.enabled && f.filter.startsWith("#@#"));
+        const parsed = response.filters
+          .filter(f => f && f.enabled !== false)
+          .map(f => this.normalizeFilter(f.filter))
+          .filter(Boolean);
+        this.filters = parsed
+          .filter(f => f.kind === 'hide')
+          .map(f => ({ filter: '##' + f.selector, domains: f.domains }));
+        this.exceptionFilters = parsed
+          .filter(f => f.kind === 'except')
+          .map(f => ({ filter: '#@#' + f.selector, domains: f.domains }));
       }
     } catch (error) {
       console.error("[CosmeticFilterEngine] Failed to load filters:", error);
@@ -95,19 +124,29 @@ class CosmeticFilterEngine {
   selectorMatches(selectorA, selectorB) { return selectorA === selectorB; }
 
   startObserver() {
-    const observer = new MutationObserver(() => { this.applyFilters(); });
-    observer.observe(document.documentElement, { childList: true, subtree: true });
+    // Stylesheet is live in the browser; re-applying on every mutation
+    // forces full-page style recalculation. Filters update via messages.
+  }
+
+  applyMessageFilters(filters) {
+    const parsed = (filters || [])
+      .filter(f => f && f.enabled !== false)
+      .map(f => this.normalizeFilter(f.filter))
+      .filter(Boolean);
+    this.filters = parsed
+      .filter(f => f.kind === 'hide')
+      .map(f => ({ filter: '##' + f.selector, domains: f.domains }));
+    this.exceptionFilters = parsed
+      .filter(f => f.kind === 'except')
+      .map(f => ({ filter: '#@#' + f.selector, domains: f.domains }));
+    this.compileFilters();
+    this.applyFilters();
   }
 
   handleMessage(message, sender, sendResponse) {
     switch (message.type) {
       case "COSMETIC_FILTERS_UPDATED":
-        if (message.filters) {
-          this.filters = message.filters.filter(f => f.enabled && f.filter.startsWith("##"));
-          this.exceptionFilters = message.filters.filter(f => f.enabled && f.filter.startsWith("#@#"));
-          this.compileFilters();
-          this.applyFilters();
-        }
+        if (message.filters) this.applyMessageFilters(message.filters);
         break;
       case "EXTENSION_TOGGLED":
         if (!message.enabled) this.styleElement.textContent = "";

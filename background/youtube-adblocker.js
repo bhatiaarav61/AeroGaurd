@@ -77,7 +77,7 @@ class YouTubeAdBlocker {
             if (!node || typeof node !== 'object') return;
             if (node.renderer) {
               const keys = Object.keys(node.renderer);
-              const adKeys = keys.filter(k => /ad|promo|sponsor|shopping|mealbar|merch/i.test(k));
+              const adKeys = keys.filter(k => /^(ad(?![a-z])|ads|ad[A-Z_]|promo|sponsor|shopping|mealbar|merch)/i.test(k));
               adKeys.forEach(k => delete node.renderer[k]);
             }
             for (const key of Object.keys(node)) {
@@ -86,7 +86,7 @@ class YouTubeAdBlocker {
                 node[key] = val.filter(item => {
                   if (item?.renderer) {
                     const rk = Object.keys(item.renderer);
-                    return !rk.some(k => /ad|promo|sponsor|shopping|mealbar|merch/i.test(k));
+                    return !rk.some(k => /^(ad(?![a-z])|ads|ad[A-Z_]|promo|sponsor|shopping|mealbar|merch)/i.test(k));
                   }
                   return true;
                 });
@@ -109,21 +109,19 @@ class YouTubeAdBlocker {
             const resp = await origFetch.apply(this, args);
             const url = args[0];
             if (typeof url === 'string' && url.includes('/youtubei/v1/player')) {
-              const clone = resp.clone();
               try {
-                const data = await clone.json();
+                const text = await resp.clone().text();
+                const data = JSON.parse(text);
                 if (data?.playabilityStatus) {
                   delete data.playabilityStatus.adSignalsInfo;
                   delete data.playabilityStatus.adsPresentation;
                 }
                 if (data?.playerConfig) { delete data.playerConfig.adConfig; delete data.playerConfig.adPlacements; }
                 if (data?.videoDetails) { delete data.videoDetails.allowAds; delete data.videoDetails.adTagUrl; delete data.videoDetails.adTagUrlSet; }
-                if (data?.streamingData?.adaptiveFormats) {
-                  data.streamingData.adaptiveFormats = data.streamingData.adaptiveFormats.filter(f =>
-                    !f.url?.includes('/api/manifest/') && !f.mimeType?.includes('application/vnd.apple.mpegurl')
-                  );
-                }
-                return new Response(JSON.stringify(data), { status: resp.status, statusText: resp.statusText, headers: resp.headers });
+                // Never touch streamingData/adaptiveFormats: stripping formats
+                // or rebuilding the body when nothing changed breaks playback.
+                const out = JSON.stringify(data);
+                return out === text ? resp : new Response(out, { status: resp.status, statusText: resp.statusText, headers: resp.headers });
               } catch { return resp; }
           }
           return resp;
@@ -177,7 +175,7 @@ class YouTubeAdBlocker {
           });
         };
 
-        setInterval(hideAds, 500); hideAds();
+        setInterval(hideAds, 1200); hideAds();
 
         // Video element ad skipping
         const patchVideo = () => {
@@ -196,7 +194,7 @@ class YouTubeAdBlocker {
           }
         };
         const vo = new MutationObserver(patchVideo);
-        vo.observe(document.body, { childList: true, subtree: true }); patchVideo();
+        vo.observe(document.body || document.documentElement, { childList: true, subtree: true }); patchVideo();
 
         // MutationObserver for dynamic ad injection
         const adObserver = new MutationObserver((mutations) => {
@@ -214,7 +212,7 @@ class YouTubeAdBlocker {
               }
             }
           });
-        adObserver.observe(document.body, { childList: true, subtree: true });
+        adObserver.observe(document.body || document.documentElement, { childList: true, subtree: true });
 
         console.log('[AdBlocker Pro] YouTube player patching installed');
       })();
@@ -252,7 +250,7 @@ class YouTubeAdBlocker {
           document.querySelectorAll('ytd-consent-bump-v2-lightbox, tp-yt-paper-dialog[ytd-consent-bump-v2-lightbox], #consent-bump, .ytd-consent-bump-v2-lightbox, yt-button-renderer[consent], ytd-button-renderer[consent]').forEach(el => { el.style.display = 'none'; el.remove(); });
           document.body.style.overflow = ''; document.documentElement.style.overflow = '';
         };
-        remove(); new MutationObserver(remove).observe(document.body, { childList: true, subtree: true });
+        remove(); new MutationObserver(remove).observe(document.body || document.documentElement, { childList: true, subtree: true });
         console.log('[AdBlocker Pro] Consent removal installed');
       })();
     `);
@@ -341,8 +339,10 @@ class YouTubeAdBlocker {
     // ============================================================
     const allows = [
       // VIDEO STREAMS — CRITICAL
-      { url: '||googlevideo.com/videoplayback*', types: ['media'] },
-      { url: '||*.googlevideo.com/*', types: ['media'] },
+      { url: '||googlevideo.com/videoplayback*', types: ['media', 'xmlhttprequest'] },
+      // NOTE: "||*.googlevideo.com/*" is invalid in DNR ("*" cannot follow "||").
+      // "||googlevideo.com" already matches the host and all its subdomains.
+      { url: '||googlevideo.com', types: ['media', 'xmlhttprequest'] },
 
       // PLAYER JAVASCRIPT — CRITICAL
       { url: '||s.ytimg.com/yts/jsbin/player-*', types: ['script'] },
@@ -357,38 +357,38 @@ class YouTubeAdBlocker {
       { url: '||s.ytimg.com/yts/img/*', types: ['image'] },
 
       // CAPTIONS / SUBTITLES
-      { url: '||youtube.com/api/timedtext*', types: ['xmlhttprequest', 'fetch'] },
+      { url: '||youtube.com/api/timedtext*', types: ['xmlhttprequest'] },
 
       // PLAYER CONFIG & API — CRITICAL FOR INITIALIZATION
-      { url: '||youtube.com/youtubei/v1/player*', types: ['xmlhttprequest', 'fetch'] },
-      { url: '||youtube.com/youtubei/v1/browse*', types: ['xmlhttprequest', 'fetch'] },
-      { url: '||youtube.com/youtubei/v1/next*', types: ['xmlhttprequest', 'fetch'] },
-      { url: '||youtube.com/youtubei/v1/search*', types: ['xmlhttprequest', 'fetch'] },
-      { url: '||youtube.com/youtubei/v1/guide*', types: ['xmlhttprequest', 'fetch'] },
+      { url: '||youtube.com/youtubei/v1/player*', types: ['xmlhttprequest'] },
+      { url: '||youtube.com/youtubei/v1/browse*', types: ['xmlhttprequest'] },
+      { url: '||youtube.com/youtubei/v1/next*', types: ['xmlhttprequest'] },
+      { url: '||youtube.com/youtubei/v1/search*', types: ['xmlhttprequest'] },
+      { url: '||youtube.com/youtubei/v1/guide*', types: ['xmlhttprequest'] },
 
       // LIVE CHAT & COMMENTS
-      { url: '||youtube.com/youtubei/v1/live_chat*', types: ['xmlhttprequest', 'fetch'] },
-      { url: '||youtube.com/youtubei/v1/comment*', types: ['xmlhttprequest', 'fetch'] },
-      { url: '||youtube.com/youtubei/v1/live_chat/get_live_chat*', types: ['xmlhttprequest', 'fetch'] },
+      { url: '||youtube.com/youtubei/v1/live_chat*', types: ['xmlhttprequest'] },
+      { url: '||youtube.com/youtubei/v1/comment*', types: ['xmlhttprequest'] },
+      { url: '||youtube.com/youtubei/v1/live_chat/get_live_chat*', types: ['xmlhttprequest'] },
 
       // EMBED & TV
-      { url: '||youtube.com/embed/*', types: ['subdocument', 'xmlhttprequest', 'fetch'] },
-      { url: '||youtube-nocookie.com/embed/*', types: ['subdocument', 'xmlhttprequest', 'fetch'] },
-      { url: '||tv.youtube.com/*', types: ['xmlhttprequest', 'fetch', 'subdocument'] },
-      { url: '||music.youtube.com/*', types: ['xmlhttprequest', 'fetch', 'subdocument'] },
+      { url: '||youtube.com/embed/*', types: ['sub_frame', 'xmlhttprequest'] },
+      { url: '||youtube-nocookie.com/embed/*', types: ['sub_frame', 'xmlhttprequest'] },
+      { url: '||tv.youtube.com/*', types: ['xmlhttprequest', 'sub_frame'] },
+      { url: '||music.youtube.com/*', types: ['xmlhttprequest', 'sub_frame'] },
 
       // SHORTS
-      { url: '||youtube.com/shorts/*', types: ['xmlhttprequest', 'fetch', 'subdocument'] },
-      { url: '||youtube.com/youtubei/v1/shorts*', types: ['xmlhttprequest', 'fetch'] },
+      { url: '||youtube.com/shorts/*', types: ['xmlhttprequest', 'sub_frame'] },
+      { url: '||youtube.com/youtubei/v1/shorts*', types: ['xmlhttprequest'] },
 
       // AUTH & ACCOUNT
-      { url: '||youtube.com/youtubei/v1/account*', types: ['xmlhttprequest', 'fetch'] },
-      { url: '||youtube.com/youtubei/v1/subscription*', types: ['xmlhttprequest', 'fetch'] },
+      { url: '||youtube.com/youtubei/v1/account*', types: ['xmlhttprequest'] },
+      { url: '||youtube.com/youtubei/v1/subscription*', types: ['xmlhttprequest'] },
 
       // LOGGING (needed for player heartbeat)
-      { url: '||youtube.com/api/stats/watchtime*', types: ['xmlhttprequest', 'fetch'] },
-      { url: '||youtube.com/api/stats/heartbeat*', types: ['xmlhttprequest', 'fetch'] },
-      { url: '||youtube.com/api/stats/qoe*', types: ['xmlhttprequest', 'fetch'] },
+      { url: '||youtube.com/api/stats/watchtime*', types: ['xmlhttprequest'] },
+      { url: '||youtube.com/api/stats/heartbeat*', types: ['xmlhttprequest'] },
+      { url: '||youtube.com/api/stats/qoe*', types: ['xmlhttprequest'] },
     ];
 
     for (const a of allows) {
@@ -510,11 +510,11 @@ class YouTubeAdBlocker {
     for (const b of blocks) {
       rules.push({
         id: id++,
-        priority: 1,
+        priority: b.includes('manifest.googlevideo.com') ? 3 : 1,
         action: { type: 'block' },
         condition: {
           urlFilter: b,
-          resourceTypes: ['xmlhttprequest', 'fetch', 'subdocument', 'image', 'script', 'stylesheet', 'ping', 'media'],
+          resourceTypes: ['xmlhttprequest', 'sub_frame', 'image', 'script', 'stylesheet', 'ping', 'media', 'other'],
           initiatorDomains: ytDomains
         }
       });
@@ -544,3 +544,5 @@ class YouTubeAdBlocker {
     return versions;
   }
 }
+export { YouTubeAdBlocker };
+export default YouTubeAdBlocker;

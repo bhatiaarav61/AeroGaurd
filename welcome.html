@@ -1,41 +1,57 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="utf-8">
-  <title>Welcome to AeroGuard Pro</title>
+  <meta charset="UTF-8">
+  <title>Welcome to AeroGuard</title>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font: 16px/1.6 system-ui; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; color: white; }
-    .container { background: rgba(255,255,255,.1); backdrop-filter: blur(20px); border-radius: 24px; padding: 48px; max-width: 500px; width: 100%; border: 1px solid rgba(255,255,255,.2); text-align: center; }
-    .logo { font-size: 64px; margin-bottom: 16px; }
-    h1 { font-size: 32px; font-weight: 700; margin-bottom: 8px; }
-    .subtitle { opacity: .8; margin-bottom: 32px; font-size: 18px; }
-    .features { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 32px; text-align: left; }
-    .feature { background: rgba(255,255,255,.1); padding: 16px; border-radius: 12px; display: flex; align-items: center; gap: 12px; }
-    .feature-icon { font-size: 24px; }
-    .btn { display: inline-block; background: white; color: #667eea; padding: 16px 32px; border-radius: 12px; font-weight: 700; font-size: 16px; text-decoration: none; transition: transform .2s; }
-    .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,.2); }
-    .footer { margin-top: 24px; opacity: .6; font-size: 13px; }
+    :root { --primary: #4a7dff; --bg: #0f1222; --card: #181c30; --text: #eef1ff; --muted: #9aa3c7; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg); color: var(--text);
+      min-height: 100vh; display: flex; align-items: center; justify-content: center;
+      padding: 32px;
+    }
+    .card {
+      max-width: 640px; width: 100%;
+      background: var(--card); border-radius: 16px; padding: 40px;
+      box-shadow: 0 16px 48px rgba(0,0,0,.45);
+    }
+    .logo { display: flex; align-items: center; gap: 14px; margin-bottom: 24px; }
+    .logo img { width: 48px; height: 48px; border-radius: 12px; }
+    h1 { font-size: 26px; }
+    .sub { color: var(--muted); margin-bottom: 28px; }
+    .features { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 28px; }
+    .feature { background: rgba(255,255,255,.04); border-radius: 12px; padding: 16px; }
+    .feature b { display: block; margin-bottom: 6px; }
+    .feature span { color: var(--muted); font-size: 13px; }
+    .stats-line { color: var(--muted); font-size: 13px; margin-bottom: 24px; }
+    .actions { display: flex; gap: 12px; }
+    .btn {
+      border: 0; border-radius: 10px; padding: 12px 22px; font-size: 15px; font-weight: 600;
+      cursor: pointer; text-decoration: none; display: inline-block;
+    }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-ghost { background: rgba(255,255,255,.08); color: var(--text); }
   </style>
 </head>
 <body>
-  <div class="container">
-    <div class="logo">🛡️</div>
-    <h1>AeroGuard Pro</h1>
-    <p class="subtitle">Production-grade ad blocking with YouTube mastery</p>
-
-    <div class="features">
-      <div class="feature"><span class="feature-icon">🎬</span><div><strong>YouTube Fixed</strong><br>Zero white screen, all ads blocked</div></div>
-      <div class="feature"><span class="feature-icon">🌐</span><div><strong>All Sites</strong><br>Cosmetic + network + anti-adblock</div></div>
-      <div class="feature"><span class="feature-icon">📊</span><div><strong>15 Filter Lists</strong><br>~100K rules, auto-updated</div></div>
-      <div class="feature"><span class="feature-icon">🔒</span><div><strong>Privacy First</strong><br>No data collection, local only</div></div>
+  <div class="card">
+    <div class="logo">
+      <img src="icons/icon-128.png" alt="AeroGuard">
+      <h1>AeroGuard is protecting you</h1>
     </div>
-
-    <a class="btn" href="#" onclick="chrome.runtime.openOptionsPage(); window.close();">Open Settings →</a>
-
-    <div class="footer">
-      <p>Version 2.0.0 • Built with Manifest V3</p>
-      <p>Click the extension icon → Settings to customize</p>
+    <p class="sub">Brave-style ad blocking built on declarativeNetRequest — fast, private and always on.</p>
+    <div class="features">
+      <div class="feature"><b>Ads blocked everywhere</b><span>EasyList, AdGuard, uBlock and 20+ regional lists are enabled out of the box, covering every country.</span></div>
+      <div class="feature"><b>Trackers &amp; malware</b><span>EasyPrivacy, AdGuard Tracking, CNAME uncloaking and badware lists stop surveillance and scams.</span></div>
+      <div class="feature"><b>YouTube without ads</b><span>Network rules, scriptlet injection and DOM filtering work together to skip and remove ads.</span></div>
+      <div class="feature"><b>Per-site control</b><span>Pause protection for any site from the toolbar, or add custom rules and filter subscriptions.</span></div>
+    </div>
+    <p class="stats-line">Tip: the AeroGuard badge shows how many requests were blocked on each page.</p>
+    <div class="actions">
+      <a class="btn btn-primary" href="options/options.html">Open Settings</a>
+      <a class="btn btn-ghost" href="help/help.html">Get Help</a>
     </div>
   </div>
 </body>

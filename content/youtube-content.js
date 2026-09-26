@@ -881,7 +881,8 @@
             urlLower.includes('/player/') || urlLower.includes('get_video_info')) {
           const clone = resp.clone();
           try {
-            const data = await clone.json();
+            const originalText = await clone.text();
+          const data = JSON.parse(originalText);
             if (data) {
               // Remove ad signals
               if (data.playabilityStatus) {
@@ -928,7 +929,9 @@
               }
 
               log('Sanitized player response');
-              return new Response(JSON.stringify(data), {
+              const out = JSON.stringify(data);
+          if (out === originalText) { log("player response unchanged - passthrough"); return resp; }
+          return new Response(out, {
                 status: resp.status,
                 statusText: resp.statusText,
                 headers: resp.headers
@@ -956,6 +959,9 @@
   // ============================================================================
   function installYtInitialDataProxy() {
     if (!CONFIG.patchYtInitialData) return;
+    return; // DISABLED: the /ad/i shredder destroyed real YouTube keys ("badges",
+    // "loadMore") and the global Object.defineProperty override aborted Polymer's
+    // boot (empty skeleton homepage). Ad renderers are hidden in the DOM instead.
 
     // Sanitize existing data
     if (window.ytInitialData) {
@@ -989,39 +995,25 @@
   }
 
   function removeAdsFromInitialData(data) {
+    // Disabled: the old /ad/i key shredder destroyed legitimate YouTube keys
+    // ("badges", "loadMore"). The proxy that called this is disabled; kept as
+    // a safe anchored walker in case anything re-enables it.
     if (!data || typeof data !== 'object') return;
-
-    const adRendererPatterns = [
-      /ad/i, /promo/i, /sponsor/i, /shopping/i, /mealbar/i, /merch/i,
-      /masthead/i, /companion/i, /sparkles/i, /banner/i, /overlay/i
-    ];
-
-    function isAdRenderer(key) {
-      return adRendererPatterns.some(p => p.test(key));
-    }
-
-    function processNode(node, parent, key) {
+    const isAdKey = (key) => /^(ad(?![a-z])|ads|ad[A-Z_]|promo|sponsor|shopping|mealbar|merch)/i.test(key);
+    const processNode = (node) => {
       if (!node || typeof node !== 'object') return;
-
-      // Handle renderer objects
-      if (node.renderer && typeof node.renderer === 'object') {
-        const rendererKeys = Object.keys(node.renderer);
-        const adKeys = rendererKeys.filter(k => isAdRenderer(k));
-        adKeys.forEach(k => {
-          log('Removed ad renderer from ytInitialData:', k);
-          delete node.renderer[k];
-        });
+      if (node.renderer) {
+        for (const k of Object.keys(node.renderer)) {
+          if (isAdKey(k)) delete node.renderer[k];
+        }
       }
-
-      // Recurse into arrays and objects
       for (const k of Object.keys(node)) {
         const val = node[k];
         if (Array.isArray(val)) {
-          // Filter array items with ad renderers
           const filtered = val.filter(item => {
             if (item?.renderer) {
               const rk = Object.keys(item.renderer);
-              return !rk.some(rk2 => isAdRenderer(rk2));
+              return !rk.some(isAdKey);
             }
             return true;
           });
@@ -1029,14 +1021,13 @@
             log('Filtered', val.length - filtered.length, 'ad items from array:', k);
             node[k] = filtered;
           }
-          filtered.forEach(item => processNode(item, node, k));
+          filtered.forEach(item => processNode(item));
         } else if (val && typeof val === 'object') {
-          processNode(val, node, k);
+          processNode(val);
         }
       }
-    }
-
-    processNode(data, null, 'root');
+    };
+    processNode(data);
   }
 
   // ============================================================================
@@ -1306,3 +1297,6 @@ window.addEventListener('aeroguard:scriptlets-updated', (event) => {
 // Start
   init();
 })();
+// Defined: pages reference hideAdElements() but the sweep lives in
+// hidePromotedContent(); function declarations hoist, so this maps it.
+function hideAdElements() { try { hidePromotedContent(); } catch (e) {} }

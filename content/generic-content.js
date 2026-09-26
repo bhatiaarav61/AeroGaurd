@@ -71,6 +71,23 @@ const NEWSLETTER_SELECTORS = [
   '.instapage', '.leadpages', '.clickfunnels', '.thrive-leads', '.bloom'
 ];
 
+// Aliases used by the per-feature cleaners below. AD_SELECTORS mirrors the
+// surgical list; OVERLAY_SELECTORS stays empty because overlay removal is
+// heuristic-only (isLikelyOverlay) - broad attribute matching breaks sites.
+const AD_SELECTORS = SAFE_GENERIC_SELECTORS;
+const OVERLAY_SELECTORS = [];
+
+// The new-tab page and some WebUI hosts inject this script before <body>
+// exists; every body access must be guarded.
+function hasBody() { return !!(document.body && document.documentElement); }
+
+function restorePageScrolling() {
+  if (!hasBody()) return;
+  document.body.style.overflow = ''; document.documentElement.style.overflow = '';
+  document.body.style.position = ''; document.documentElement.style.position = '';
+  document.body.style.height = ''; document.documentElement.style.height = '';
+}
+
 function log(...args) { if (CONFIG.debug) console.log('[AeroGuard]', ...args); }
 function warn(...args) { if (CONFIG.debug) console.warn('[AeroGuard]', ...args); }
 
@@ -105,14 +122,28 @@ function removeElement(el) {
 // SHADOW DOM PIERCING
 // ============================================================================
 
-function pierceShadowDOM(root, selector, callback) {
-  if (!CONFIG.enableShadowDomPiercing) return;
+// Collect every open shadow root once, then run each selector across
+// [document, ...roots]. Walking all elements per selector was O(selectors x nodes).
+function collectShadowRoots(root, roots, depth) {
+  if (!CONFIG.enableShadowDomPiercing || depth > 6) return;
   try {
-    root.querySelectorAll(selector).forEach(callback);
     root.querySelectorAll('*').forEach(el => {
-      if (el.shadowRoot) pierceShadowDOM(el.shadowRoot, selector, callback);
+      if (el.shadowRoot) {
+        roots.push(el.shadowRoot);
+        collectShadowRoots(el.shadowRoot, roots, depth + 1);
+      }
     });
   } catch (e) { /* ignore */ }
+}
+
+function runInAllRoots(selectors, callback) {
+  const roots = [document];
+  collectShadowRoots(document, roots, 0);
+  for (const root of roots) {
+    for (const sel of selectors) {
+      try { root.querySelectorAll(sel).forEach(callback); } catch (e) {}
+    }
+  }
 }
 
 // ============================================================================
@@ -122,45 +153,19 @@ function pierceShadowDOM(root, selector, callback) {
 function hideAdElements() {
   if (!CONFIG.hideAdElements) return;
   let count = 0;
-  for (const sel of AD_SELECTORS) {
-    try {
-      document.querySelectorAll(sel).forEach(el => {
-        if (!el._adBlocked && isVisible(el)) { hideElement(el); count++; }
-      });
-    } catch(e) {}
-  }
-  // Shadow DOM
-  if (CONFIG.enableShadowDomPiercing) {
-    for (const sel of AD_SELECTORS) {
-      pierceShadowDOM(document, sel, el => {
-        if (!el._adBlocked && isVisible(el)) { hideElement(el); count++; }
-      });
-    }
-  }
+  runInAllRoots(AD_SELECTORS, el => {
+    if (!el._adBlocked && isVisible(el)) { hideElement(el); count++; }
+  });
   if (count) log(`Hidden ${count} ad elements`);
 }
 
 function removeCookieBanners() {
   if (!CONFIG.removeCookieBanners) return;
   let count = 0;
-  for (const sel of COOKIE_SELECTORS) {
-    try {
-      document.querySelectorAll(sel).forEach(el => {
-        if (!el._adBlockedRemoved && isLikelyCookieBanner(el)) { removeElement(el); count++; }
-      });
-    } catch(e) {}
-  }
-  // Shadow DOM
-  if (CONFIG.enableShadowDomPiercing) {
-    for (const sel of COOKIE_SELECTORS) {
-      pierceShadowDOM(document, sel, el => {
-        if (!el._adBlockedRemoved && isLikelyCookieBanner(el)) { removeElement(el); count++; }
-      });
-    }
-  }
-  document.body.style.overflow = ''; document.documentElement.style.overflow = '';
-  document.body.style.position = ''; document.documentElement.style.position = '';
-  document.body.style.height = ''; document.documentElement.style.height = '';
+  runInAllRoots(COOKIE_SELECTORS, el => {
+    if (!el._adBlockedRemoved && isLikelyCookieBanner(el)) { removeElement(el); count++; }
+  });
+  restorePageScrolling();
   if (count) log(`Removed ${count} cookie banners`);
 }
 
@@ -175,22 +180,10 @@ function isLikelyCookieBanner(el) {
 function removeNewsletterPopups() {
   if (!CONFIG.removeNewsletterPopups) return;
   let count = 0;
-  for (const sel of NEWSLETTER_SELECTORS) {
-    try {
-      document.querySelectorAll(sel).forEach(el => {
-        if (!el._adBlockedRemoved && isLikelyNewsletter(el)) { removeElement(el); count++; }
-      });
-    } catch(e) {}
-  }
-  // Shadow DOM
-  if (CONFIG.enableShadowDomPiercing) {
-    for (const sel of NEWSLETTER_SELECTORS) {
-      pierceShadowDOM(document, sel, el => {
-        if (!el._adBlockedRemoved && isLikelyNewsletter(el)) { removeElement(el); count++; }
-      });
-    }
-  }
-  document.body.style.overflow = ''; document.documentElement.style.overflow = '';
+  runInAllRoots(NEWSLETTER_SELECTORS, el => {
+    if (!el._adBlockedRemoved && isLikelyNewsletter(el)) { removeElement(el); count++; }
+  });
+  restorePageScrolling();
   if (count) log(`Removed ${count} newsletter popups`);
 }
 
@@ -207,20 +200,9 @@ function isLikelyNewsletter(el) {
 function removeOverlayAds() {
   if (!CONFIG.removeOverlayAds) return;
   let count = 0;
-  for (const sel of OVERLAY_SELECTORS) {
-    try {
-      document.querySelectorAll(sel).forEach(el => {
-        if (!el._adBlockedRemoved && isLikelyOverlay(el)) { removeElement(el); count++; }
-      });
-    } catch(e) {}
-  }
-  if (CONFIG.enableShadowDomPiercing) {
-    for (const sel of OVERLAY_SELECTORS) {
-      pierceShadowDOM(document, sel, el => {
-        if (!el._adBlockedRemoved && isLikelyOverlay(el)) { removeElement(el); count++; }
-      });
-    }
-  }
+  runInAllRoots(OVERLAY_SELECTORS, el => {
+    if (!el._adBlockedRemoved && isLikelyOverlay(el)) { removeElement(el); count++; }
+  });
   if (count) log(`Removed ${count} overlay ads`);
 }
 
@@ -235,6 +217,7 @@ function isLikelyOverlay(el) {
 
 // EMERGENCY: Unblock main content elements that might have been incorrectly hidden
 function emergencyUnblockMainContent() {
+  if (!hasBody()) return;
   const mainSelectors = ['main', '#main', '#content', '.main', '.content', '.container', 'article', '[role="main"]'];
   mainSelectors.forEach(sel => {
     document.querySelectorAll(sel).forEach(el => {
@@ -253,7 +236,6 @@ function emergencyUnblockMainContent() {
   document.documentElement.style.overflow = '';
 }
 emergencyUnblockMainContent();
-setInterval(emergencyUnblockMainContent, 500);
 
 // ============================================================================
 // ANTI-ADBLOCK
@@ -287,27 +269,22 @@ function blockAntiAdblock() {
 // ============================================================================
 
 function setupMutationObserver() {
-  const ALL_SELECTORS = [...SAFE_GENERIC_SELECTORS, ...COOKIE_SELECTORS, ...NEWSLETTER_SELECTORS, ...OVERLAY_SELECTORS];
-  observer = new MutationObserver(mutations => {
-    let check = false;
+  observer = new MutationObserver((mutations) => {
+    let added = false;
     for (const m of mutations) {
-      if (m.type === 'childList' && m.addedNodes.length) {
-        for (const n of m.addedNodes) {
-          if (n.nodeType === 1 && (isLikelyAd(n) || n.querySelector?.(ALL_SELECTORS.join(',')) || isLikelyCookieBanner(n) || isLikelyNewsletter(n) || isLikelyOverlay(n))) { check = true; break; }
-        }
-      }
+      if (m.addedNodes.length > 0) { added = true; break; }
     }
-    if (check) {
+    if (added) {
       clearTimeout(observer._debounce);
       observer._debounce = setTimeout(() => {
         if (CONFIG.hideAdElements) hideAdElements();
         if (CONFIG.removeCookieBanners) removeCookieBanners();
         if (CONFIG.removeNewsletterPopups) removeNewsletterPopups();
         if (CONFIG.removeOverlayAds) removeOverlayAds();
-      }, 200);
+      }, 400);
     }
   });
-  observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['class','id','style','src','data-ad'] });
+  observer.observe(document.body || document.documentElement, { childList: true, subtree: true });
 }
 
 function isLikelyAd(el) {
@@ -377,12 +354,6 @@ function init() {
   if (CONFIG.blockAntiAdblock) blockAntiAdblock();
 
   setupMutationObserver();
-  cleanupInterval = setInterval(() => {
-    if (CONFIG.hideAdElements) hideAdElements();
-    if (CONFIG.removeCookieBanners) removeCookieBanners();
-    if (CONFIG.removeNewsletterPopups) removeNewsletterPopups();
-    if (CONFIG.removeOverlayAds) removeOverlayAds();
-  }, 2000);
 
   chrome.runtime.onMessage.addListener(handleMessage);
   chrome.runtime.sendMessage({ type: 'CONTENT_SCRIPT_READY', url: location.href }).catch(()=>{});

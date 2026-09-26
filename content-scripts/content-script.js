@@ -70,22 +70,22 @@ class ContentScript {
     console.log("[ContentScript] YouTube ad blocker activated");
 
     // Aggressive YouTube ad blocking interval
+    // Throttled: a 500ms sweep of dozens of selectors starved the main thread
     this.youtubeAdInterval = setInterval(() => {
       if (!this.enabled || !this.tabEnabled) return;
       this.blockYouTubeAds();
-    }, 500);
+    }, 1500);
 
     // Also observe for dynamic ad elements
-    const ytObserver = new MutationObserver((mutations) => {
-      if (!this.enabled || !this.tabEnabled) return;
-      for (const mutation of mutations) {
-        for (const node of mutation.addedNodes) {
-          if (node.nodeType === Node.ELEMENT_NODE) {
-            this.blockYouTubeAdElements(node);
-          }
-        }
-      }
-    });
+    let ytSweepPending = null;
+    const sweep = (root) => {
+      if (ytSweepPending) clearTimeout(ytSweepPending);
+      ytSweepPending = setTimeout(() => {
+        ytSweepPending = null;
+        if (this.enabled && this.tabEnabled) this.blockYouTubeAdElements(root || document);
+      }, 250);
+    };
+    const ytObserver = new MutationObserver(() => sweep(document));
 
     ytObserver.observe(document.documentElement, { childList: true, subtree: true });
 

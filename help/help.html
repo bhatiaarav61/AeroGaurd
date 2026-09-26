@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>AeroGuard Help</title>
+  <style>
+    :root { --primary: #4a7dff; --bg: #0f1222; --card: #181c30; --text: #eef1ff; --muted: #9aa3c7; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); padding: 40px 20px; }
+    .wrap { max-width: 720px; margin: 0 auto; }
+    h1 { margin-bottom: 8px; }
+    .sub { color: var(--muted); margin-bottom: 28px; }
+    details {
+      background: var(--card); border-radius: 12px; padding: 16px 20px; margin-bottom: 12px;
+    }
+    summary { font-weight: 600; cursor: pointer; }
+    details p { color: var(--muted); margin-top: 10px; line-height: 1.6; }
+    a { color: var(--primary); }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>AeroGuard Help</h1>
+    <p class="sub">Answers to the most common questions.</p>
+
+    <details open>
+      <summary>An ad still appears — what do I do?</summary>
+      <p>Click the AeroGuard icon and use <b>Block element</b> to pick the ad directly. For video or network ads, use <b>Report an issue</b> in the popup so the filter lists can be fixed upstream.</p>
+    </details>
+
+    <details>
+      <summary>How do I pause protection for one site?</summary>
+      <p>Open the popup and switch off the per-site toggle. The site moves to your exceptions and all AeroGuard rules stop applying there until you switch it back on.</p>
+    </details>
+
+    <details>
+      <summary>Which filter lists are enabled?</summary>
+      <p>AeroGuard ships with EasyList, EasyPrivacy, AdGuard Base/Tracking/Annoyances, uBlock lists, Peter Lowe's, NoCoin, OISD and 20+ regional EasyLists so every country is covered. Manage them all in <b>Settings → Filter lists</b>.</p>
+    </details>
+
+    <details>
+      <summary>Can I add my own filter subscription?</summary>
+      <p>Yes — go to <b>Settings → Filter lists → Add custom list</b> and paste the URL of an AdBlock Plus-compatible list. It is compiled to native rules the same way the built-in lists are.</p>
+    </details>
+
+    <details>
+      <summary>Why does the badge show a number?</summary>
+      <p>That is the number of requests AeroGuard blocked on the current page: ads, trackers, malware and annoyances combined.</p>
+    </details>
+
+    <details>
+      <summary>Videos or a site look broken</summary>
+      <p>Pause AeroGuard for that site from the popup. If that fixes it, please report the site so an exception can be added to the filter lists.</p>
+    </details>
+
+    <p style="margin-top:24px"><a href="https://github.com/bhatiaarav61/AeroGuard/issues">Report an issue on GitHub</a></p>
+  </div>
+</body>
+</html>

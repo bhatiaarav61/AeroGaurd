@@ -1,0 +1,45 @@
+{
+ "withExt": {
+  "label": "WITH extension",
+  "state": {
+   "title": "YouTube",
+   "bodyTextLen": 0,
+   "gridItems": 0,
+   "imgs": 0,
+   "imgsTotal": 0,
+   "shimPresent": true,
+   "playerResponse": false
+  },
+  "ytRequests": [],
+  "blockedCount": 0,
+  "blocked": [],
+  "consoleErrors": []
+ },
+ "without": {
+  "label": "WITHOUT extension",
+  "state": {
+   "title": "YouTube",
+   "bodyTextLen": 154,
+   "gridItems": 0,
+   "imgs": 0,
+   "imgsTotal": 7,
+   "shimPresent": false,
+   "playerResponse": false
+  },
+  "ytRequests": [
+   {
+    "url": "www.youtube.com/youtubei/v1/guide?prettyPrint=false",
+    "status": 200
+   },
+   {
+    "url": "www.youtube.com/youtubei/v1/feedback?prettyPrint=false",
+    "status": 200
+   }
+  ],
+  "blockedCount": 0,
+  "blocked": [],
+  "consoleErrors": [
+   "Failed to load resource: net::ERR_NAME_NOT_RESOLVED"
+  ]
+ }
+}

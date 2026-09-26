@@ -715,7 +715,6 @@ class CookieProtection {
   }
 }
 
-export { CookieProtection };
 
 // Export for use in service worker (CommonJS fallback)
 if (typeof module !== 'undefined' && module.exports) {

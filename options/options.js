@@ -81,6 +81,7 @@ class OptionsController {
     // Advanced
     this.strictBlockingToggle = document.getElementById('strictBlocking');
     this.blockWebRTCToggle = document.getElementById('blockWebRTC');
+    this.httpsByDefaultToggle = document.getElementById('httpsByDefault');
     this.blockRemoteFontsToggle = document.getElementById('blockRemoteFonts');
     this.blockThirdPartyFramesToggle = document.getElementById('blockThirdPartyFrames');
     this.debugModeToggle = document.getElementById('debugMode');
@@ -145,6 +146,7 @@ class OptionsController {
     // Advanced
     this.strictBlockingToggle.addEventListener('click', () => this.toggleSetting('advanced.strictBlocking', this.strictBlockingToggle));
     this.blockWebRTCToggle.addEventListener('click', () => this.toggleSetting('advanced.blockWebRTC', this.blockWebRTCToggle));
+    this.httpsByDefaultToggle.addEventListener('click', () => this.toggleSetting('advanced.httpsByDefault', this.httpsByDefaultToggle));
     this.blockRemoteFontsToggle.addEventListener('click', () => this.toggleSetting('advanced.blockRemoteFonts', this.blockRemoteFontsToggle));
     this.blockThirdPartyFramesToggle.addEventListener('click', () => this.toggleSetting('advanced.blockThirdPartyFrames', this.blockThirdPartyFramesToggle));
     this.debugModeToggle.addEventListener('click', () => this.toggleSetting('debugMode', this.debugModeToggle));
@@ -424,6 +426,7 @@ class OptionsController {
 
     setToggle(this.strictBlockingToggle, this.settings.advanced?.strictBlocking === true);
     setToggle(this.blockWebRTCToggle, this.settings.advanced?.blockWebRTC === true);
+    setToggle(this.httpsByDefaultToggle, this.settings.advanced?.httpsByDefault !== false);
     setToggle(this.blockRemoteFontsToggle, this.settings.advanced?.blockRemoteFonts === true);
     setToggle(this.blockThirdPartyFramesToggle, this.settings.advanced?.blockThirdPartyFrames === true);
     setToggle(this.debugModeToggle, this.settings.debugMode === true);

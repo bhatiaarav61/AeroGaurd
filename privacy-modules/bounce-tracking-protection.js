@@ -612,7 +612,6 @@ class BounceTrackingProtection {
   }
 }
 
-export { BounceTrackingProtection };
 
 // Export for use in service worker (CommonJS fallback)
 if (typeof module !== 'undefined' && module.exports) {

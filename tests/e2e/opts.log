@@ -1,0 +1,11 @@
+[ext] nbllhgpinghdmkhokdokgkiajihebekn
+goto err: net::ERR_BLOCKED_BY_CLIENT at chrome-extension://nbllhgpinghdmkhokdokgkiajihebek
+options url: chrome-error://chromewebdata/
+EXTENSION STATE: {
+ "enabledRulesetsErr": "Cannot read properties of undefined (reading 'getEnabledRulesets')",
+ "dynamicErr": "Cannot read properties of undefined (reading 'getDynamicRules')",
+ "storageErr": "Cannot read properties of undefined (reading 'local')",
+ "runtimeErr": "Cannot read properties of undefined (reading 'sendMessage')"
+}
+console from options page:
+SW alive after message: false

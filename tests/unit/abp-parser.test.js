@@ -295,13 +295,14 @@ function testDnrRuleCreation() {
   // Test 1: Basic block rule
   try {
     const parsed = parseAbpFilter('||example.com^');
-    const rule = createDnrRule(parsed, 1, 'test');
+    const rule = createDnrRule(parsed, 1, 'test', '||example.com^');
     assert(rule);
     assert(rule.action.type === 'block');
-    // For ||domain^ patterns, urlFilter becomes * and domains array is used for matching
-    assert(rule.condition.urlFilter === '*' || rule.condition.urlFilter === '||example.com^');
-    assert(rule.condition.resourceTypes.length > 0);
-    assert(rule.condition.domains && rule.condition.domains.includes('example.com'));
+    // ||example.com^ describes the request URL itself
+    assert(rule.condition.urlFilter === '||example.com^');
+    // ...and must NOT become an initiator restriction (that would block
+    // every request made *by* example.com instead of requests *to* it)
+    assert(!rule.condition.domains);
     console.log('✓ Test 1: Basic block rule');
     passed++;
   } catch (e) {
@@ -325,10 +326,11 @@ function testDnrRuleCreation() {
   // Test 3: Rule with domains
   try {
     const parsed = parseAbpFilter('||ads.example.com^$domain=example.org');
-    const rule = createDnrRule(parsed, 3, 'test');
+    const rule = createDnrRule(parsed, 3, 'test', '||ads.example.com^$domain=example.org');
     assert(rule);
     assert(rule.condition.domains);
     assert(rule.condition.domains.includes('example.org'));
+    assert(rule.condition.urlFilter === '||ads.example.com^');
     console.log('✓ Test 3: Rule with domains');
     passed++;
   } catch (e) {

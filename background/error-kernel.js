@@ -1,355 +1,185 @@
 /**
- * Error Kernel — The Heart of AeroGuard
- * Zero uncaught exceptions, automatic recovery, state reconciliation
- * Every async operation MUST use errorKernel.wrap()
+ * Error Kernel
+ * Centralized error handling with wrapper utilities for Chrome API calls
+ * Provides graceful degradation and diagnostics
  */
 
-// ============================================================================
-// Result Type — Railway-oriented programming
-// ============================================================================
+// Error categories
+const ERROR_CATEGORIES = {
+  STORAGE: 'storage',
+  DNR: 'dnr',
+  MESSAGING: 'messaging',
+  SCRIPT: 'script',
+  NETWORK: 'network',
+  UNKNOWN: 'unknown'
+};
 
-export class Result {
-  constructor(success, value, error) {
-    this.success = success;
-    this.value = value;
-    this.error = error;
-  }
+// Max retries for transient failures
+const MAX_RETRIES = 3;
 
-  static ok(value) { return new Result(true, value, null); }
-  static err(error) { return new Result(false, null, error); }
+// Backoff delays (ms)
+const BACKOFF_DELAYS = [100, 500, 2000];
 
-  map(fn) {
-    if (!this.success) return this;
-    try { return Result.ok(fn(this.value)); }
-    catch (e) { return Result.err(e); }
-  }
-
-  flatMap(fn) {
-    if (!this.success) return this;
-    try { return fn(this.value); }
-    catch (e) { return Result.err(e); }
-  }
-
-  mapError(fn) {
-    if (this.success) return this;
-    return Result.err(fn(this.error));
-  }
-
-  unwrap() {
-    if (!this.success) throw this.error;
-    return this.value;
-  }
-
-  unwrapOr(defaultValue) {
-    return this.success ? this.value : defaultValue;
-  }
-}
-
-// ============================================================================
-// Error Kernel — Central error handling with retry, circuit breaker, fallback
-// ============================================================================
-
-export class ErrorKernel {
-  constructor(options = {}) {
-    this.circuitBreakers = new Map();
-    this.metrics = options.metrics || null;
-    this.logger = options.logger || console;
-    this.defaultRetry = options.defaultRetry ?? 3;
-    this.defaultRetryDelay = options.defaultRetryDelay ?? 1000;
-    this.defaultTimeout = options.defaultTimeout ?? 30000;
-  }
-
-  /**
-   * Wrap any async operation with comprehensive error handling
-   * @param {string} operationName - Name for logging/metrics
-   * @param {Function} fn - Async function to wrap
-   * @param {Object} options - Configuration
-   * @returns {Promise<Result>}
-   */
-  async wrap(operationName, fn, options = {}) {
-    const {
-      retry = this.defaultRetry,
-      retryDelay = this.defaultRetryDelay,
-      fallback = null,
-      circuitBreaker = null,
-      timeout = this.defaultTimeout,
-      metrics = null,
-      context = {},
-      shouldRetry = (error) => this._isRetryableError(error)
-    } = options;
-
-    const correlationId = crypto.randomUUID();
-    const startTime = performance.now();
-    const metricName = metrics?.histogram || `operation.${operationName}.duration`;
-
-    // Check circuit breaker
-    if (circuitBreaker && this._isCircuitOpen(circuitBreaker)) {
-      this.logger.warn(`[ErrorKernel] Circuit open for ${circuitBreaker}, using fallback`);
-      return this._executeFallback(fallback, operationName, new Error('Circuit breaker open'), correlationId);
-    }
-
-    let lastError = null;
-    let attempt = 0;
-
-    while (attempt <= retry) {
-      try {
-        // Execute with timeout
-        const result = await this._withTimeout(fn(), timeout);
-
-        // Record success metrics
-        const duration = performance.now() - startTime;
-        this._recordMetric(metricName, duration, true);
-        this._recordMetric(`operation.${operationName}.success`, 1);
-
-        if (attempt > 0) {
-          this.logger.info(`[ErrorKernel] ${operationName} succeeded on retry ${attempt}`);
-        }
-
-        return Result.ok(result);
-      } catch (error) {
-        lastError = error;
-        attempt++;
-
-        this.logger.warn(`[ErrorKernel] ${operationName} attempt ${attempt}/${retry + 1} failed:`, error.message, { correlationId, ...context });
-        this._recordMetric(`operation.${operationName}.retry`, 1);
-        this._recordMetric(`operation.${operationName}.error`, 1, { error: error.name });
-
-        // Check if we should retry
-        if (attempt <= retry && shouldRetry(error)) {
-          await this._sleep(retryDelay * attempt); // Exponential backoff
-          continue;
-        }
-        break;
-      }
-    }
-
-    // All retries exhausted, try fallback
-    this.logger.error(`[ErrorKernel] ${operationName} failed after ${attempt} attempts`, { correlationId, ...context });
-
-    if (circuitBreaker) {
-      this._recordCircuitFailure(circuitBreaker);
-    }
-
-    return this._executeFallback(fallback, operationName, lastError, correlationId);
-  }
-
-  /**
-   * Execute fallback function
-   */
-  async _executeFallback(fallback, operationName, error, correlationId) {
-    if (!fallback) {
-      this._recordMetric(`operation.${operationName}.failure`, 1);
-      return Result.err(error);
-    }
-
+/**
+ * Wrap a Chrome API call with error handling
+ * @param {string} label - Label for diagnostics
+ * @param {Function} fn - Async function to wrap
+ * @returns {Promise<{success: boolean, data?: any, error?: Error}>}
+ */
+export async function wrapAPI(label, fn) {
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
     try {
-      this.logger.info(`[ErrorKernel] Executing fallback for ${operationName}`, { correlationId });
-      const result = await fallback(error);
-      this._recordMetric(`operation.${operationName}.fallback_success`, 1);
-      return Result.ok(result);
-    } catch (fallbackError) {
-      this.logger.error(`[ErrorKernel] Fallback for ${operationName} also failed`, fallbackError, { correlationId });
-      this._recordMetric(`operation.${operationName}.fallback_failure`, 1);
-      return Result.err(fallbackError);
-    }
-  }
+      const data = await fn();
+      return { success: true, data };
+    } catch (error) {
+      const isLast = attempt === MAX_RETRIES - 1;
+      console.error(
+        `[AeroGuard] ${label} failed (attempt ${attempt + 1}/${MAX_RETRIES}):`,
+        error.message
+      );
 
-  /**
-   * Execute with timeout
-   */
-  _withTimeout(promise, timeoutMs) {
-    return Promise.race([
-      promise,
-      new Promise((_, reject) =>
-        setTimeout(() => reject(new Error(`Timeout after ${timeoutMs}ms`)), timeoutMs)
-      )
-    ]);
-  }
-
-  /**
-   * Sleep utility
-   */
-  _sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-  }
-
-  /**
-   * Check if error is retryable
-   */
-  _isRetryableError(error) {
-    if (!error) return false;
-    const message = error.message?.toLowerCase() || '';
-    const name = error.name?.toLowerCase() || '';
-
-    // Network errors
-    if (name === 'networkerror' || name === 'timeouterror') return true;
-    if (message.includes('network') || message.includes('timeout') || message.includes('fetch')) return true;
-    if (message.includes('aborted') || message.includes('503') || message.includes('502') || message.includes('504')) return true;
-    if (message.includes('429') || message.includes('econnrefused') || message.includes('econnreset')) return true;
-
-    // Chrome extension specific
-    if (message.includes('extension context invalidated')) return true;
-    if (message.includes('message port closed')) return true;
-
-    return false;
-  }
-
-  /**
-   * Circuit breaker management
-   */
-  _isCircuitOpen(name) {
-    const breaker = this.circuitBreakers.get(name);
-    if (!breaker) return false;
-    if (breaker.state === 'open') {
-      // Check if we should try half-open
-      if (Date.now() - breaker.lastFailure > breaker.resetTimeout) {
-        breaker.state = 'half-open';
-        return false;
+      if (isLast) {
+        return {
+          success: false,
+          error: new Error(`${label}: ${error.message}`),
+          category: categorizeError(error)
+        };
       }
-      return true;
-    }
-    return false;
-  }
 
-  _recordCircuitFailure(name) {
-    let breaker = this.circuitBreakers.get(name);
-    if (!breaker) {
-      breaker = { failures: 0, state: 'closed', lastFailure: 0, resetTimeout: 30000 };
-      this.circuitBreakers.set(name, breaker);
-    }
-    breaker.failures++;
-    breaker.lastFailure = Date.now();
-    if (breaker.failures >= 5) {
-      breaker.state = 'open';
-      this.logger.warn(`[ErrorKernel] Circuit breaker opened for ${name}`);
+      // Wait before retry
+      await sleep(BACKOFF_DELAYS[attempt] || 2000);
     }
   }
 
-  /**
-   * Record metrics
-   */
-  _recordMetric(name, value, tags = {}) {
-    if (this.metrics) {
-      this.metrics.record(name, value, tags);
+  return { success: false, error: new Error(`${label}: max retries exceeded`), category: ERROR_CATEGORIES.UNKNOWN };
+}
+
+/**
+ * Categorize an error for diagnostics
+ */
+function categorizeError(error) {
+  const msg = (error.message || '').toLowerCase();
+  if (msg.includes('storage') || msg.includes('quota')) return ERROR_CATEGORIES.STORAGE;
+  if (msg.includes('declarativeNetRequest') || msg.includes('rules')) return ERROR_CATEGORIES.DNR;
+  if (msg.includes('messaging') || msg.includes('port')) return ERROR_CATEGORIES.MESSAGING;
+  if (msg.includes('script') || msg.includes('inject')) return ERROR_CATEGORIES.SCRIPT;
+  if (msg.includes('network') || msg.includes('fetch') || msg.includes('dns')) return ERROR_CATEGORIES.NETWORK;
+  return ERROR_CATEGORIES.UNKNOWN;
+}
+
+/**
+ * Sleep helper
+ */
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+/**
+ * Wrap storage operations with error handling
+ */
+export async function wrapStorage(label, fn) {
+  return wrapAPI(`storage:${label}`, fn);
+}
+
+/**
+ * Wrap DNR operations with error handling
+ */
+export async function wrapDNR(label, fn) {
+  return wrapAPI(`dnr:${label}`, fn);
+}
+
+/**
+ * Wrap messaging operations with error handling
+ */
+export async function wrapMessaging(label, fn) {
+  return wrapAPI(`messaging:${label}`, fn);
+}
+
+/**
+ * Wrap script injection with error handling
+ */
+export async function wrapScriptInjection(label, fn) {
+  return wrapAPI(`script:${label}`, fn);
+}
+
+/**
+ * Create a safe async wrapper that never throws
+ */
+export function safeAsync(fn) {
+  return async (...args) => {
+    try {
+      return await fn(...args);
+    } catch (error) {
+      console.error(`[AeroGuard] Safe async error:`, error.message);
+      return null;
     }
-  }
+  };
+}
 
-  /**
-   * Get circuit breaker status
-   */
-  getCircuitStatus(name) {
-    return this.circuitBreakers.get(name) || { state: 'unknown' };
-  }
+/**
+ * Log error to console with context
+ */
+export function logError(context, error) {
+  console.error(`[AeroGuard][${context}]`, error);
+}
 
-  /**
-   * Reset circuit breaker
-   */
-  resetCircuit(name) {
-    this.circuitBreakers.delete(name);
-  }
+/**
+ * Check if error is transient (retryable)
+ */
+export function isTransientError(error) {
+  const msg = (error.message || '').toLowerCase();
+  return (
+    msg.includes('network') ||
+    msg.includes('timeout') ||
+    msg.includes('abort') ||
+    msg.includes('unavailable') ||
+    msg.includes('service worker') ||
+    msg.includes('extension unloaded')
+  );
+}
 
-  /**
-   * Wrap multiple operations in parallel with individual error handling
-   */
-  async wrapAll(operations) {
-    const results = await Promise.allSettled(
-      operations.map(({ name, fn, options }) => this.wrap(name, fn, options))
-    );
+/**
+ * Error kernel singleton with diagnostics
+ */
+const errorKernel = {
+  errors: [],
+  maxErrors: 100,
 
-    return results.map((r, i) => {
-      if (r.status === 'fulfilled') return r.value;
-      return Result.err(r.reason);
+  /** Record an error */
+  record(error, context = 'unknown') {
+    this.errors.unshift({
+      message: error.message,
+      context,
+      timestamp: Date.now(),
+      stack: error.stack
     });
-  }
-
-  /**
-   * Wrap operations in sequence, stopping on first failure (unless continueOnError)
-   */
-  async wrapSequence(operations, continueOnError = false) {
-    const results = [];
-    for (const { name, fn, options } of operations) {
-      const result = await this.wrap(name, fn, options);
-      results.push(result);
-      if (!result.success && !continueOnError) break;
+    if (this.errors.length > this.maxErrors) {
+      this.errors.pop();
     }
-    return results;
+  },
+
+  /** Get all recorded errors */
+  getErrors() {
+    return [...this.errors];
+  },
+
+  /** Clear error log */
+  clearErrors() {
+    this.errors = [];
+  },
+
+  /** Get error summary */
+  getSummary() {
+    const counts = {};
+    for (const err of this.errors) {
+      counts[err.context] = (counts[err.context] || 0) + 1;
+    }
+    return {
+      total: this.errors.length,
+      byContext: counts
+    };
   }
-}
+};
 
-// ============================================================================
-// Global error kernel instance
-// ============================================================================
-
-export const errorKernel = new ErrorKernel({
-  defaultRetry: 3,
-  defaultRetryDelay: 1000,
-  defaultTimeout: 30000
-});
-
-// ============================================================================
-// Convenience wrapper for common patterns
-// ============================================================================
-
-/**
- * Wrap chrome.storage operations
- */
-export async function wrapStorage(operationName, fn) {
-  return errorKernel.wrap(`storage.${operationName}`, fn, {
-    retry: 2,
-    retryDelay: 500,
-    timeout: 10000,
-    fallback: async () => ({ error: 'Storage unavailable, using defaults' }),
-    circuitBreaker: 'chrome.storage'
-  });
-}
-
-/**
- * Wrap chrome.runtime messaging
- */
-export async function wrapMessaging(operationName, fn) {
-  return errorKernel.wrap(`messaging.${operationName}`, fn, {
-    retry: 1,
-    retryDelay: 100,
-    timeout: 5000,
-    circuitBreaker: 'chrome.runtime'
-  });
-}
-
-/**
- * Wrap fetch/network operations
- */
-export async function wrapNetwork(operationName, fn) {
-  return errorKernel.wrap(`network.${operationName}`, fn, {
-    retry: 3,
-    retryDelay: 1000,
-    timeout: 30000,
-    circuitBreaker: 'network'
-  });
-}
-
-/**
- * Wrap DNR operations
- */
-export async function wrapDNR(operationName, fn) {
-  return errorKernel.wrap(`dnr.${operationName}`, fn, {
-    retry: 2,
-    retryDelay: 500,
-    timeout: 10000,
-    circuitBreaker: 'chrome.declarativeNetRequest'
-  });
-}
-
-/**
- * Wrap content script injection
- */
-export async function wrapScriptInjection(operationName, fn) {
-  return errorKernel.wrap(`scripting.${operationName}`, fn, {
-    retry: 1,
-    retryDelay: 100,
-    timeout: 10000,
-    circuitBreaker: 'chrome.scripting',
-    shouldRetry: (error) => error.message.includes('context invalidated') || error.message.includes('frame')
-  });
-}
-
-export default ErrorKernel;
+export { ERROR_CATEGORIES, errorKernel };
+export default { errorKernel, wrapStorage, wrapDNR, wrapMessaging, wrapScriptInjection, safeAsync, logError, isTransientError, ERROR_CATEGORIES, wrapAPI };

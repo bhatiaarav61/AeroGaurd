@@ -7,6 +7,7 @@
 class ElementHider {
   constructor() {
     this.filters = [];
+    this.genericSelectors = [];
     this.builtInFilters = [
       // Generic ad containers
       "##.ad-banner", "##.adsbox", "##.advertisement", "##.sponsor", "##.ad-unit",
@@ -21,67 +22,64 @@ class ElementHider {
       "##[id^=\"ad-\"]", "##[id*=\"ad_\"]", "##[id*=\"google_ads\"]", "##[id*=\"adsense\"]",
       "##[id*=\"doubleclick\"]", "##[id*=\"advert\"]", "##[id*=\"sponsor\"]",
       
-      // Class-based selectors
-      "##[class^=\"ad-\"]", "##[class*=\"ad_\"]", "##[class*=\" banner\"]", "##[class*=\"sponsor\"]",
-      "##[class*=\"google_ads\"]", "##[class*=\"adsense\"]", "##[class*=\"doubleclick\"]",
-      "##[class*=\"advert\"]", "##[class*=\"sponsored\"]", "##[class*=\"partner\"]",
-      "##[class*=\"affiliate\"]", "##[class*=\"promo\"]", "##[class*=\"banner\"]",
+      // Class-based selectors (ad-industry slot names only - broad matches like
+      // [class*="overlay"] / [class*="popup"] hide legit modals and break pages)
+      "##[id^=\"ad-\"]", "##[id*=\"ad_\"]", "##[id*=\"google_ads\"]", "##[id*=\"adsense\"]",
+      "##[id*=\"doubleclick\"]", "##[id*=\"advert\"]", "##[id*=\"sponsor\"]",
+
+      "##[class^=\"ad-\"]", "##[class*=\"ad_\"]", "##[class*=\"google_ads\"]", "##[class*=\"adsense\"]",
+      "##[class*=\"doubleclick\"]", "##[class*=\"sponsored\"]",
       "##[class*=\"leaderboard\"]", "##[class*=\"skyscraper\"]", "##[class*=\"rectangle\"]",
-      "##[class*=\"popup\"]", "##[class*=\"overlay\"]", "##[class*=\"modal\"]",
-      "##[class*=\"interstitial\"]", "##[class*=\"preroll\"]", "##[class*=\"midroll\"]",
-      "##[class*=\"postroll\"]", "##[class*=\"sticky\"]", "##[class*=\"fixed-bottom\"]",
-      "##[class*=\"fixed-top\"]", "##[class*=\"floating\"]", "##[class*=\"toast\"]",
-      "##[class*=\"snackbar\"]", "##[class*=\"notification\"]", "##[class*=\"alert\"]",
+      "##[class*=\"preroll\"]", "##[class*=\"midroll\"]", "##[class*=\"postroll\"]",
       
       // Data attribute selectors
       "##[data-ad]", "##[data-advert]", "##[data-advertisement]", "##[data-sponsor]",
       "##[data-promo]", "##[data-affiliate]", "##[data-google-ad]", "##[data-ad-slot]",
-      
+
       // Iframe ad selectors
-      "##iframe[src*=\"ads\"]", "##iframe[src*=\"advert\"]", "##iframe[src*=\"doubleclick\"]",
-      "##iframe[src*=\"googleads\"]", "##iframe[src*=\"adsense\"]", "##iframe[src*=\"googlesyndication\"]",
+      "##iframe[src*=\"doubleclick\"]", "##iframe[src*=\"googlesyndication\"]",
       "##iframe[src*=\"amazon-ads\"]", "##iframe[id^=\"google_ads\"]", "##iframe[id*=\"adsense\"]",
-      
-      // Cookie/GDPR/Consent banners
+
+      // Cookie/GDPR/Consent banners (exact classes only - broad attribute
+      // matches like [class*="overlay"] break logins, modals and page layout)
       "##.cookie-banner", "##.cookie-notice", "##.cookie-consent", "##.cookie-warning",
-      "##.cookie-popup", "##.cookie-overlay", "##.gdpr-banner", "##.gdpr-notice",
-      "##.gdpr-consent", "##.ccpa-banner", "##.consent-banner", "##.consent-notice",
-      "##.consent-popup", "##[id*=\"cookie\"]", "##[class*=\"cookie\"]", "##[id*=\"gdpr\"]",
-      "##[class*=\"gdpr\"]", "##[id*=\"consent\"]", "##[class*=\"consent\"]",
-      
+      "##.cookie-popup", "##.gdpr-banner", "##.gdpr-notice", "##.gdpr-consent",
+      "##.consent-banner", "##.consent-popup", "##.ccpa-banner",
+
       // Newsletter/Signup popups
-      "##.newsletter-popup", "##.newsletter-signup", "##.email-capture", "##.subscribe-popup",
-      "##.mailchimp", "##.push-notification", "##.app-install-banner", "##.app-download-banner",
-      
+      "##.newsletter-popup", "##.newsletter-signup", "##.subscribe-popup",
+
       // Social widgets
-      "##.fb-like", "##.fb-share-button", "##.twitter-share-button", "##.linkedin-share",
-      "##.pinterest-pin-it", "##.social-share", "##.share-buttons", "##.social-widget",
-      
+      "##.fb-like", "##.fb-share-button", "##.twitter-share-button", "##.social-share",
+
       // Outbrain/Taboola/MGID/Revcontent
-      "##.outbrain", "##.taboola", "##.mgid", "##.revcontent", "##.content-recommendations",
-      "##.recommended-links", "##.sponsored-links", "##.native-ads",
-      
+      "##.outbrain", "##.taboola", "##.mgid", "##.revcontent", "##.sponsored-links",
+
       // Specific ad networks
-      "##.adsbygoogle", "##.google-auto-placed", "##.adsense", "##.adslot",
-      "##.dfp-ad", "##.gpt-ad", "##.amazon-ads", "##.adnxs", "##.criteo",
-      "##.rubicon", "##.pubmatic", "##.openx", "##.indexexchange", "##.smartadserver",
-      
+      "##.adsbygoogle", "##.google-auto-placed", "##.adslot",
+      "##.dfp-ad", "##.gpt-ad", "##.adnxs", "##.criteo",
+      "##.rubicon", "##.pubmatic", "##.openx", "##.smartadserver",
+
       // Video ad overlays
-      "##.video-ad", "##.ad-overlay", "##.ad-companion", "##.vpaid-ad", "##.vast-ad",
-      "##.ad-tag", "##.ad-marker", "##.ad-break", "##.ad-slot-video",
-      
-      // Mobile app banners
-      "##.app-banner", "##.smart-banner", "##.ios-app-banner", "##.android-app-banner",
-      
+      "##.video-ad", "##.vpaid-ad", "##.vast-ad",
+
       // Anti-adblock walls
       "##.adblock-detected", "##.adblock-warning", "##.disable-adblock", "##.please-disable-adblock",
       "##.adblock-message", "##.ad-blocker-detected",
-      
-      // YouTube specific
-      "##.ytd-display-ad-renderer", "##.ytd-promoted-sparkles-web-renderer",
-      "##.ytd-ad-slot-renderer", "##.ytp-ad-module", "##.ytp-ad-player-overlay",
-      "##.ytp-ad-preview-container", "##.ytp-ad-skip-button-container",
-      "##.video-ads", "##.ad-showing",
+
+      // Anchored structural ad containers (prefix matches only)
+      "##[id^=\"google_ads_iframe\"]", "##[id^=\"div-gpt-ad\"]",
+      "##[id^=\"taboola-\"]", "##[id^=\"outbrain\"]", "##[id^=\"advert-\"]",
+      "##[class^=\"advert-\"]", "##div[class^=\"ad-slot\"]", "##div[class^=\"ad-banner\"]",
+      "##[id$=\"-ads\"]", "##[class$=\"-ads\"]",
+      // YouTube feed ad renderers (never hide the player containers themselves:
+      // .video-ads/.ad-showing/.ytp-ad-module wrap the player and hide the video)
+      "##ytd-display-ad-renderer", "##ytd-promoted-sparkles-web-renderer",
+      "##ytd-ad-slot-renderer", "##ytd-rich-ad-slot-renderer",
+      "##ytd-action-companion-ad-renderer", "##ytd-companion-slot-renderer",
+      "##ytd-promoted-video-renderer", "##ytd-in-feed-ad-renderer",
+      "##ytd-banner-ad-renderer", "##ytd-mealbar-promo-renderer", "##ytd-merch-shelf-renderer",
+      "##ytd-shopping-renderer", "##masthead-ad", "##ytd-masthead-ad-renderer",
     ];
 
     this.styleElement = null;
@@ -92,12 +90,42 @@ class ElementHider {
 
   async init() {
     await this.loadFilters();
+    await this.loadGenericShard();
     this.createStyleElement();
     this.applyFilters();
     this.startObserver();
     this.startYouTubeObserver();
     chrome.runtime.onMessage.addListener(this.handleMessage.bind(this));
-    console.log("[ElementHider] Initialized with " + (this.filters.length + this.builtInFilters.length) + " filters");
+    console.log("[ElementHider] Initialized with " + this.allSelectorCount() + " filters");
+  }
+
+  // Generic EasyList/AdGuard cosmetic selectors, compiled by build-rules.js into
+  // rules/cosmetic/generic.json. Fetched directly (not via the service worker)
+  // so every page gets full generic coverage without a giant message round-trip.
+  async loadGenericShard() {
+    this.genericSelectors = [];
+    try {
+      const url = chrome.runtime.getURL("rules/cosmetic/generic.json");
+      const res = await fetch(url);
+      if (!res.ok) return;
+      const data = await res.json();
+      const host = location.hostname.replace(/^www\./, "");
+      const matches = (d) => host === d || host.endsWith("." + d);
+      const excluded = (entry) => (entry[1] || []).some(matches);
+      const excepted = new Set();
+      for (const [domain, selectors] of Object.entries(data.genericExcept || {})) {
+        if (matches(domain)) for (const sel of selectors) excepted.add(sel);
+      }
+      this.genericSelectors = (data.generic || [])
+        .filter(sel => !excepted.has(sel))
+        .filter(sel => !(data.genericNeg || []).some(entry => entry[0] === sel && excluded(entry)));
+    } catch (error) {
+      console.warn("[ElementHider] Generic shard unavailable:", error);
+    }
+  }
+
+  allSelectorCount() {
+    return this.builtInFilters.length + this.genericSelectors.length + this.filters.length;
   }
 
   async loadFilters() {
@@ -121,9 +149,20 @@ class ElementHider {
   applyFilters() {
     if (!this.styleElement) return;
 
-    const allFilters = [...this.builtInFilters, ...this.filters
-      .filter(f => f.filter && f.filter.startsWith("##"))
-      .map(f => f.filter.substring(2))];
+    const toSelector = (raw) => {
+      if (typeof raw !== 'string') return null;
+      const text = raw.trim();
+      if (!text) return null;
+      if (text.startsWith('#@#')) return null;
+      if (text.startsWith('##')) return text.slice(2).trim();
+      const idx = text.indexOf('##');
+      if (idx > 0) return text.slice(idx + 2).trim();
+      if (/^[#.[]/.test(text)) return text; // uBO-style bare selector
+      return null;
+    };
+    const allFilters = [...this.builtInFilters, ...this.genericSelectors.map(sel => "##" + sel), ...this.filters
+      .map(f => toSelector(f.filter))
+      .filter(Boolean)];
 
     if (allFilters.length === 0) return;
 
@@ -135,17 +174,11 @@ class ElementHider {
   }
 
   startObserver() {
-    this.observer = new MutationObserver((mutations) => {
-      let shouldReapply = false;
-      for (const mutation of mutations) {
-        if (mutation.type === "childList" && mutation.addedNodes.length > 0) {
-          shouldReapply = true;
-          break;
-        }
-      }
-      if (shouldReapply) this.applyFilters();
-    });
-    this.observer.observe(document.documentElement, { childList: true, subtree: true });
+    // CSS selectors are matched live by the browser - re-setting the
+    // stylesheet on every mutation forces a full style recalc and makes
+    // pages unresponsive. The stylesheet is applied once and updated only
+    // via explicit messages (COSMETIC_FILTERS_UPDATED / EXTENSION_TOGGLED).
+    this.observer = null;
   }
 
   startYouTubeObserver() {
@@ -220,7 +253,7 @@ class ElementHider {
         if (video.currentTime < video.duration - 1) {
           video.currentTime = video.duration;
         }
-        const skipButtons = document.querySelectorAll(".ytp-ad-skip-button", ".ytp-ad-skip-button-modern", ".ytp-ad-skip-button-text");
+        const skipButtons = document.querySelectorAll(".ytp-ad-skip-button, .ytp-ad-skip-button-modern, .ytp-ad-skip-button-text");
         skipButtons.forEach(btn => {
           if (btn.offsetParent !== null) {
             btn.click();

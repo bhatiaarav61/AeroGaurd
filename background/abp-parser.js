@@ -13,26 +13,73 @@ const RESOURCE_TYPE_MAP = {
   stylesheet: 'stylesheet',
   object: 'object',
   xmlhttprequest: 'xmlhttprequest',
-  'object-subrequest': 'object_subrequest',
+  'object-subrequest': 'xmlhttprequest',
   subdocument: 'sub_frame',
   document: 'main_frame',
   elemhide: 'other',
+  generichide: 'other',
+  genericblock: 'other',
   other: 'other',
   font: 'font',
   media: 'media',
   websocket: 'websocket',
+  webrtc: 'other',
   ping: 'ping',
   csp: 'csp_report',  // DNR uses csp_report, not csp
+  cookie: null,       // cosmetic-only in uBO: no network equivalent
 };
 
-// Reverse mapping for excluded types - only valid DNR resource types
+// Recursive mapping for excluded types - only valid DNR resource types
 // Valid DNR resource types per Chrome extension API:
 // https://developer.chrome.com/docs/extensions/reference/declarativeNetRequest/#type-RuleCondition
 const ALL_RESOURCE_TYPES = [
-  'main_frame', 'sub_frame', 'script', 'xmlhttprequest',
-  'image', 'stylesheet', 'font', 'object', 'media',
-  'websocket', 'other', 'ping', 'csp_report'
+  'main_frame', 'sub_frame', 'stylesheet', 'script', 'image', 'font',
+  'object', 'xmlhttprequest', 'ping', 'csp_report', 'media', 'websocket',
+  'webtransport', 'webbundle', 'other'
 ];
+
+// ABP option name -> canonical ABP resource name before RESOURCE_TYPE_MAP lookup
+const TYPE_ALIASES = {
+  css: 'stylesheet',
+  xhr: 'xmlhttprequest',
+  frame: 'sub_frame',
+  doc: 'document',
+  beacon: 'ping',
+  popup: 'document',
+  webrtc: 'other',
+  websocket: 'websocket',
+  webtransport: 'webtransport',
+  webbundle: 'webbundle'
+};
+
+const VALID_REQUEST_METHODS = ['connect', 'delete', 'get', 'head', 'options', 'patch', 'post', 'put', 'other'];
+
+/**
+ * Split a "$domain=a.com|~b.com" style option value.
+ * Public-suffix wildcards (shell.*, gmx.*) cannot be expressed in DNR and are
+ * dropped instead of being widened into an over-broad rule.
+ */
+function splitDomainOption(value) {
+  const domains = [];
+  const excludedDomains = [];
+  const dropped = [];
+  for (const part of String(value).split('|')) {
+    let entry = part.trim();
+    if (!entry) continue;
+    const excluded = entry.startsWith('~');
+    if (excluded) entry = entry.slice(1);
+    if (entry.includes('*') || !/^[a-z0-9.-]+$/i.test(entry)) {
+      dropped.push(entry);
+      continue;
+    }
+    const clean = entry.toLowerCase().replace(/^\*\./, '').replace(/\.$/, '');
+    if (!clean) continue;
+    if (excluded) excludedDomains.push(clean);
+    else domains.push(clean);
+  }
+  return { domains, excludedDomains, dropped };
+}
+
 
 /**
  * Parse an ABP filter string into structured components
@@ -47,6 +94,8 @@ export function parseAbpFilter(filter) {
   const options = {
     domains: [],
     excludedDomains: [],
+    requestDomains: [],
+    methods: [],
     resourceTypes: [],
     excludedResourceTypes: [],
     domainType: null,
@@ -57,7 +106,9 @@ export function parseAbpFilter(filter) {
     removeParams: [],
     csp: null,
     cookie: null,
-    important: false
+    important: false,
+    unsupported: false,
+    allTypes: false
   };
 
   // Handle exception rules (@@)
@@ -123,76 +174,155 @@ function parseOptions(optionStr, options) {
       // Domain options
       case 'domain':
         if (value) {
-          value.split('|').forEach(d => {
-            d = d.trim();
-            if (d) {
-              if (d.startsWith('~')) {
-                options.excludedDomains.push(d.slice(1));
-              } else {
-                options.domains.push(d);
-              }
-            }
-          });
+          const split = splitDomainOption(value);
+          options.domains.push(...split.domains);
+          options.excludedDomains.push(...split.excludedDomains);
         }
         break;
       case '~domain':
         if (value) {
-          value.split('|').forEach(d => {
-            d = d.trim();
-            if (d) options.excludedDomains.push(d);
-          });
+          const split = splitDomainOption(value);
+          options.excludedDomains.push(...split.domains);
         }
         break;
 
-      // Resource type options
+      // Resource type options (ABP/uBO/AdGuard names and short aliases)
       case 'script':
       case 'image':
       case 'stylesheet':
+      case 'css':
       case 'object':
-      case 'xmlhttprequest':
       case 'object-subrequest':
+      case 'xmlhttprequest':
+      case 'xhr':
       case 'subdocument':
+      case 'frame':
       case 'document':
-      case 'elemhide':
+      case 'doc':
       case 'other':
       case 'font':
       case 'media':
       case 'websocket':
+      case 'webrtc':
+      case 'webtransport':
+      case 'webbundle':
       case 'ping':
-      case 'csp':
-      case 'cookie':
-      case 'redirect':
-      case 'redirect-rule':
-      case 'removeparam':
-        // These are not resource types but filter options - handle separately
+      case 'beacon':
+      case 'popup':
+      case 'elemhide':
+      case 'all':
+        if (key === 'all') {
+          options.resourceTypes = ALL_RESOURCE_TYPES.slice();
+          options.allTypes = true;
+          break;
+        }
+        options.resourceTypes.push(TYPE_ALIASES[key] || key);
         break;
+
+      // Cosmetic/content-op hints (handled by cosmetic layer): the network
+      // request itself still blocks like uBO ($generichide only skips *generic*
+      // hiding, enforced via #@# rules in the cosmetic engine).
+      case 'generichide':
+      case 'genericblock':
+      case 'specifichide':
+      case 'ghide':
+        break;
+
+      case 'ehide':
+      case 'shide':
+      case 'inline-script':
+      case 'inline-font':
+      case 'webrtc':
+      case 'sitekey':
+      case 'cookie':
+      case 'badfilter':
+      case 'empty':
+      case 'mp4':
+        options.unsupported = true;
+        break;
+
+      // $csp=... cannot be represented in DNR
+      case 'csp':
+        if (value) options.unsupported = true;
+        break;
+
+      // Response-rewriting / non-DNR-expressible options: dropping the
+      // option INVERTS the filter's meaning (e.g. $replace rewrites ad
+      // placeholders inside a response - converting it to a block rule
+      // takes down the whole endpoint, like YouTube's /youtubei API).
+      case 'replace':
+      case 'uritransform':
+      case 'uritransition':
+      case 'jsonprune':
+      case 'permissions':
+      case 'deduplicate':
+      case 'redirect-rule':
+      case 'noop':
+        options.unsupported = true;
+        break;
+
+      // $removeparam=... -> redirect with a query transform
+      case 'removeparam':
+        if (value) {
+          options.removeParams = value.split('|').map(p => p.trim()).filter(p => /^[a-zA-Z0-9_.-]+$/.test(p));
+          if (options.removeParams.length === 0) options.unsupported = true;
+        }
+        break;
+
+      // $to=example.com -> requestDomains, $from=example.com -> initiator doms
+      case 'to':
+        if (value) options.requestDomains.push(...splitDomainOption(value).domains);
+        break;
+      case 'from':
+        if (value) options.domains.push(...splitDomainOption(value).domains);
+        break;
+
       case 'important':
         options.important = true;
         break;
+      case '~important':
+        options.unsupported = true;
+        break;
+      case 'first-party':
+      case '1p':
+        options.domainType = 'firstParty';
+        break;
+      case '~first-party':
+      case '~1p':
+        options.domainType = 'thirdParty';
+        break;
+
       case '~script':
       case '~image':
       case '~stylesheet':
+      case '~css':
       case '~object':
       case '~xmlhttprequest':
+      case '~xhr':
       case '~object-subrequest':
       case '~subdocument':
+      case '~frame':
       case '~document':
+      case '~doc':
       case '~elemhide':
       case '~other':
       case '~font':
       case '~media':
       case '~websocket':
       case '~ping':
+      case '~beacon':
       case '~csp':
-      case '~important':
-        options.excludedResourceTypes.push(key.slice(1));
+      case '~popup':
+        options.excludedResourceTypes.push(TYPE_ALIASES[key.slice(1)] || key.slice(1));
         break;
 
-      // Third-party options - use domainType for DNR compatibility
+      // Third-party options
       case 'third-party':
+      case '3p':
         options.domainType = 'thirdParty';
         break;
       case '~third-party':
+      case '~3p':
         options.domainType = 'firstParty';
         break;
 
@@ -206,103 +336,106 @@ function parseOptions(optionStr, options) {
         options.collapse = true;
         break;
 
-      // Redirect
+      // Redirects need bundled surrogate files: treat as plain block rules.
       case 'redirect':
-        if (value) options.redirect = value;
-        break;
       case 'redirect-rule':
-        if (value) options.redirectRule = value;
+        options.redirect = value || null;
         break;
 
-      // Remove parameters
-      case 'removeparam':
-        if (value) {
-          options.removeParams = value.split('|').map(p => p.trim()).filter(p => p);
-        }
-        break;
-
-      // CSP
-      case 'csp':
-        if (value) options.csp = value;
-        break;
-
-      // Cookie
-      case 'cookie':
-        if (value) options.cookie = value;
-        break;
     }
   }
 }
 
 /**
- * Convert ABP urlPattern to DNR urlFilter
- * @param {string} pattern - ABP url pattern
- * @param {Object} options - Parsed options
- * @returns {string|null} DNR-compatible urlFilter or null if pattern is invalid/too broad
+ * Convert an ABP url pattern into a DNR urlFilter.
+ * DNR supports the same core syntax (`*`, `^`, `|`, `||`), so the pattern is
+ * only cleaned up - never truncated, which is what made older builds over-block.
+ *
+ * @param {string} pattern - ABP url pattern (without options)
+ * @returns {string|null} DNR urlFilter or null when it cannot be represented
  */
 export function convertToUrlFilter(pattern, options = {}) {
-  if (!pattern || pattern === '*' || pattern === '') return null;
+  if (pattern === undefined || pattern === null) return null;
+  let urlFilter = String(pattern).trim();
 
-  let urlFilter = pattern;
+  if (urlFilter === '' || urlFilter === '*') return '*';
+  if (isRegexFilter(urlFilter)) return null; // handled by convertToRegexFilter()
 
-  // Handle regex patterns (/regex/) - DNR doesn't support regex
-  if (urlFilter.startsWith('/') && urlFilter.endsWith('/')) {
-    return null; // Skip regex patterns
+  // '~' is ABP-only negation syntax, never valid inside a DNR urlFilter
+  if (urlFilter.includes('~')) return null;
+  // ASCII only (Chrome requirement)
+  if (!isAsciiPattern(urlFilter)) return null;
+
+  // Collapse wildcard runs ('**' is invalid, '***' is meaningless)
+  urlFilter = urlFilter.replace(/\*{2,}/g, '*');
+
+  // A trailing '|' anchors to the end of the URL, which DNR cannot express
+  urlFilter = urlFilter.replace(/\|+$/, '');
+  // Only a single leading '|' or the '||' domain anchor are valid
+  urlFilter = urlFilter.replace(/^\|(?!\|)/, '|');
+
+  if (urlFilter === '' || urlFilter === '*' || urlFilter === '|' || urlFilter === '||' || urlFilter === '^') {
+    return '*';
   }
-
-  // Remove anchor markers that DNR doesn't support
-  // | at start = beginning of URL
-  // | at end = end of URL
-  // || = domain separator (start of domain)
-  urlFilter = urlFilter.replace(/^\|/, '');  // Leading | (start of URL)
-  urlFilter = urlFilter.replace(/\|$/, '');  // Trailing | (end of URL)
-
-  // Handle ||domain^ pattern - this is the most common case
-  if (pattern.startsWith('||') && pattern.includes('^')) {
-    const domainPart = pattern.slice(2, pattern.indexOf('^'));
-    // Keep the ||domain^ format as DNR supports it natively
-    return `||${domainPart}^`;
-  }
-
-  // Handle ^ separator character
-  // In ABP, ^ means any separator character (/, ?, :, @, etc.) or end of string
-  // In DNR, ^ is supported as a separator character
-  // We can keep ^ in the pattern as DNR supports it
-
-  // Handle wildcards
-  // * in ABP = any characters (including separators)
-  // DNR also uses * for wildcard
-
-  // Handle | at start of pattern (not ||) - beginning of URL
-  if (pattern.startsWith('|') && !pattern.startsWith('||')) {
-    // This means match from start of URL
-    // In DNR, we can't easily express "start of URL" without knowing the scheme
-    // Best approximation: remove the | and let it match anywhere
-  }
-
-  // If no special characters, treat as substring match
-  if (!urlFilter.includes('*') && !urlFilter.includes('^') && !urlFilter.includes('||')) {
-    // Short strings should be substring matched
-    if (urlFilter.length <= 3) {
-      return null; // Too short, skip
-    }
-    // Longer strings could be exact path matches
-    return urlFilter;
-  }
-
-  // For query parameter patterns (e.g., &rb=&uuid=, -ad-manager/),
-  // don't convert to * - use them as-is for substring matching
-  if (urlFilter.includes('=') || urlFilter.includes('-') || urlFilter.includes('_')) {
-    return urlFilter;
-  }
-
-  // Skip overly broad patterns that would match everything
-  if (urlFilter === '*' || urlFilter === 'http://*' || urlFilter === 'https://*') {
-    return null;
-  }
-
   return urlFilter;
 }
+
+export function isRegexFilter(pattern) {
+  return typeof pattern === 'string' && pattern.length > 2 && pattern.startsWith('/') && pattern.endsWith('/');
+}
+
+export function isAsciiPattern(value) {
+  return !/[\u0000-\u001f\u007f-\uffff]/.test(value);
+}
+
+/**
+ * Check whether a regex can run on Chrome's RE2 engine.
+ */
+export function isRe2Safe(pattern) {
+  if (!pattern || !isAsciiPattern(pattern)) return false;
+  // Reject lookahead/lookbehind only — (?:...) and (?P<name>...) ARE valid RE2.
+  if (/\(\?[=!]|\(\?<[=!]/.test(pattern)) return false;
+  if (/\\[1-9]/.test(pattern)) return false;     // backreferences
+  if (/\\$/.test(pattern)) return false;         // trailing escape swallows the closing quote
+  return true;
+}
+
+/**
+ * Chrome load-time check for regexFilter (RE2 subset, <=1024 chars, compilable).
+ * Returns an error string, or null when the pattern is safe to ship.
+ */
+export function validateRegexFilter(pattern) {
+  if (typeof pattern !== 'string' || pattern.length === 0) return 'empty regexFilter';
+  if (pattern.length > 1024) return `regexFilter exceeds 1024 chars (${pattern.length})`;
+  if (!isAsciiPattern(pattern)) return 'regexFilter is not ASCII';
+  if (!isRe2Safe(pattern)) return 'regexFilter uses RE2-unsupported construct';
+  try {
+    // RE2 named groups (?P<n>) do not compile in JS — translate for the probe.
+    // eslint-disable-next-line no-unused-vars
+    const _probe = new RegExp(pattern.replace(/\(\?P</g, '(?<'));
+  } catch (e) {
+    return `regexFilter not compilable: ${e.message}`;
+  }
+  return null;
+}
+
+/**
+ * Extract the source of an ABP regex filter ('/foo/' -> 'foo').
+ */
+export function convertToRegexFilter(pattern) {
+  if (!isRegexFilter(pattern)) return null;
+  const source = pattern.slice(1, -1);
+  if (source.length === 0 || source.length > 1024) return null;
+  if (!isRe2Safe(source)) return null;
+  try {
+    // eslint-disable-next-line no-unused-vars
+    const _probe = new RegExp(source.replace(/\(\?P</g, '(?<'));
+  } catch {
+    return null;
+  }
+  return source;
+}
+
 
 /**
  * Convert parsed ABP filter to DNR rule
@@ -313,131 +446,72 @@ export function convertToUrlFilter(pattern, options = {}) {
  * @returns {Object|null} DNR rule or null if invalid
  */
 export function createDnrRule(parsed, ruleId, listKey = '', originalFilter = '') {
-  if (!parsed) return null;
+  if (!parsed || !parsed.options) return null;
+  const { urlPattern, options, isException } = parsed;
+  if (options.unsupported) return null;
 
-  const { domains, excludedDomains, urlPattern, options, isException } = parsed;
+  // Prefer the original filter text: it still carries the ||domain^ prefix
+  // that parseAbpFilter() split off.
+  const rawFilter = originalFilter || urlPattern || '';
+  const urlPart = rawFilter.split('$')[0].trim();
 
-  // Convert URL pattern to DNR urlFilter
-  // For ||domain^ patterns, the original filter contains the domain info
-  // but urlPattern is empty after parsing, so we need to use originalFilter
-  let urlFilter = convertToUrlFilter(urlPattern || originalFilter, options);
-  if (!urlFilter) return null;
-
-  // Determine resource types
-  let resourceTypes;
-  if (options.resourceTypes.length > 0) {
-    resourceTypes = options.resourceTypes
-      .map(t => RESOURCE_TYPE_MAP[t])
-      .filter(Boolean);
-  } else if (options.excludedResourceTypes.length > 0) {
-    const excluded = options.excludedResourceTypes
-      .map(t => RESOURCE_TYPE_MAP[t])
-      .filter(Boolean);
-    resourceTypes = ALL_RESOURCE_TYPES.filter(t => !excluded.includes(t));
+  const condition = {};
+  if (isRegexFilter(urlPart)) {
+    const regexSource = convertToRegexFilter(urlPart);
+    if (!regexSource) return null;
+    condition.regexFilter = regexSource;
   } else {
-    // Default: all resource types EXCEPT main_frame (to avoid blocking page navigation)
-    resourceTypes = ALL_RESOURCE_TYPES.filter(t => t !== 'main_frame');
+    const urlFilter = convertToUrlFilter(urlPart, options);
+    if (!urlFilter) return null;
+    condition.urlFilter = urlFilter;
   }
 
-  // Remove duplicates
-  resourceTypes = [...new Set(resourceTypes)];
+  // Resource types: only set them when the filter is type-specific, otherwise
+  // the rule applies to every request type (same as Brave/uBO defaults).
+  const toDnrTypes = (types) => [...new Set(types.map(t => RESOURCE_TYPE_MAP[t] || t))].filter(t => ALL_RESOURCE_TYPES.includes(t));
+  if (options.resourceTypes.length > 0) {
+    const types = toDnrTypes(options.resourceTypes);
+    if (types.length === 0) return null;
+    condition.resourceTypes = types;
+  }
+  if (options.excludedResourceTypes.length > 0) {
+    const excluded = toDnrTypes(options.excludedResourceTypes);
+    if (excluded.length > 0) condition.excludedResourceTypes = excluded;
+  }
 
-  // Remove invalid resource types that might have been added
-  const VALID_DNR_RESOURCE_TYPES = ['main_frame', 'sub_frame', 'script', 'xmlhttprequest', 'image', 'stylesheet', 'font', 'object', 'media', 'websocket', 'other', 'ping', 'csp_report'];
-  resourceTypes = resourceTypes.filter(t => VALID_DNR_RESOURCE_TYPES.includes(t));
-
-  // Build condition
-  const condition = { urlFilter, resourceTypes };
-
-  // Add domains from ||domain^ part
-  if (domains.length > 0) {
-    condition.domains = domains;
-  }
-  // Add domains from $domain= option
-  if (options.domains.length > 0) {
-    // If we already have domains from ||domain^, we need to merge
-    if (condition.domains) {
-      condition.domains = [...new Set([...condition.domains, ...options.domains])];
-    } else {
-      condition.domains = options.domains;
-    }
-  }
-  if (excludedDomains.length > 0) {
-    condition.excludedDomains = excludedDomains;
-  }
-  // Add excluded domains from $~domain= option
-  if (options.excludedDomains.length > 0) {
-    if (condition.excludedDomains) {
-      condition.excludedDomains = [...new Set([...condition.excludedDomains, ...options.excludedDomains])];
-    } else {
-      condition.excludedDomains = options.excludedDomains;
-    }
-  }
+  // Initiator restrictions come from $domain= / $from= only.
+  // parsed.domains holds the ||domain^ part, which describes the *request*
+  // URL; without the original filter text it becomes a requestDomains filter.
+  const initiatorDomains = [...new Set(options.domains)];
+  const excludedInitiatorDomains = [...new Set(options.excludedDomains)];
+  const requestDomains = [...new Set([
+    ...options.requestDomains,
+    ...(originalFilter ? [] : parsed.domains)
+  ])];
+  if (initiatorDomains.length > 0) condition.domains = initiatorDomains;
+  if (excludedInitiatorDomains.length > 0) condition.excludedDomains = excludedInitiatorDomains;
+  if (requestDomains.length > 0) condition.requestDomains = requestDomains;
+  if (options.methods.length > 0) condition.requestMethods = [...new Set(options.methods)];
   if (options.domainType === 'firstParty' || options.domainType === 'thirdParty') {
     condition.domainType = options.domainType;
   }
-  if (options.matchCase) {
-    condition.isUrlFilterCaseSensitive = true;
-  }
+  if (options.matchCase) condition.isUrlFilterCaseSensitive = true;
 
-  // Build action
+  // Action
   let action;
+  let priority = isException ? 2 : 1;
   if (isException) {
     action = { type: 'allow' };
-  } else if (options.redirect) {
-    action = {
-      type: 'redirect',
-      redirect: { url: options.redirect }
-    };
-  } else if (options.redirectRule) {
-    action = {
-      type: 'redirect',
-      redirect: { regexSubstitution: options.redirectRule }
-    };
   } else if (options.removeParams.length > 0) {
-    // DNR doesn't support removeparam directly, convert to allow with header removal
-    // Note: This only works for request headers, not query params
-    // For query param removal, we need to use a redirect rule with regexSubstitution
-    action = {
-      type: 'allow',
-      allow: {
-        removeHeaders: options.removeParams.map(p => ({ name: p, operation: 'remove' }))
-      }
-    };
-  } else if (options.csp) {
-    action = {
-      type: 'allow',
-      allow: {
-        responseHeaders: [{
-          name: 'Content-Security-Policy',
-          value: options.csp,
-          operation: 'append'
-        }]
-      }
-    };
-  } else if (options.cookie) {
-    // Cookie rules are complex, skip for now
-    action = { type: 'block' };
+    // $removeparam -> strip the query parameter with a URL transform
+    action = { type: 'redirect', redirect: { transform: { queryTransform: { removeParams: options.removeParams } } } };
   } else {
+    // $redirect needs a bundled surrogate resource: block instead of breaking
     action = { type: 'block' };
   }
+  if (options.important) priority += 2;
 
-  // Calculate priority
-  // Higher priority for:
-  // - Exception rules (allow)
-  // - More specific rules (with domains)
-  // - $important rules
-  let priority = 1;
-  if (isException) priority = 2;
-  if (options.important) priority = 3;
-  if (domains.length > 0) priority += 1;
-
-  return {
-    id: ruleId,
-    priority,
-    action,
-    condition
-  };
+  return { id: ruleId, priority, action, condition };
 }
 
 /**
@@ -489,12 +563,30 @@ export function parseFilterList(text, options = {}) {
  */
 export function validateDnrRule(rule) {
   if (!rule || typeof rule !== 'object') return false;
-  if (!rule.id || typeof rule.id !== 'number') return false;
+  if (!rule.id || typeof rule.id !== 'number' || !Number.isInteger(rule.id) || rule.id < 1) return false;
   if (!rule.action || !rule.action.type) return false;
-  if (!rule.condition || !rule.condition.urlFilter) return false;
-  if (!rule.condition.resourceTypes || !Array.isArray(rule.condition.resourceTypes)) return false;
-  if (rule.condition.resourceTypes.length === 0) return false;
+  if (!rule.condition || (!rule.condition.urlFilter && !rule.condition.regexFilter)) return false;
+  if (rule.condition.resourceTypes !== undefined &&
+      (!Array.isArray(rule.condition.resourceTypes) || rule.condition.resourceTypes.length === 0)) return false;
   return true;
+}
+
+/**
+ * Collect the targets of $badfilter lines so the build script can drop both
+ * the cancelled filter and the badfilter itself.
+ */
+export function collectBadFilters(text) {
+  const bad = new Set();
+  for (const line of String(text).split('\n')) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('!') || trimmed.startsWith('[')) continue;
+    const optionIndex = trimmed.indexOf('$');
+    if (optionIndex === -1) continue;
+    const options = trimmed.slice(optionIndex + 1).split(',').map(o => o.trim());
+    if (!options.includes('badfilter')) continue;
+    bad.add(trimmed.slice(0, optionIndex));
+  }
+  return bad;
 }
 
 /**
@@ -509,8 +601,14 @@ export function filterValidRules(rules) {
 export default {
   parseAbpFilter,
   convertToUrlFilter,
+  convertToRegexFilter,
+  isRegexFilter,
+  isRe2Safe,
+  validateRegexFilter,
+  isAsciiPattern,
   createDnrRule,
   parseFilterList,
+  collectBadFilters,
   validateDnrRule,
   filterValidRules,
   RESOURCE_TYPE_MAP,
